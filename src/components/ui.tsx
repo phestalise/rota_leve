@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,50 +11,144 @@ import {
   Text,
   TextInput,
   TextInputProps,
+  TextProps,
+  TextStyle,
   View,
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, scoreColor, spacing } from '../theme';
+import Svg, { Circle } from 'react-native-svg';
+import {
+  colors,
+  fonts,
+  radius,
+  scoreTone,
+  shadow,
+  spacing,
+  Tone,
+  toneColors,
+} from '../theme';
+
+export type IconName = keyof typeof Ionicons.glyphMap;
+
+/* ------------------------------------------------------------------ */
+/* Tipografia                                                          */
+/* ------------------------------------------------------------------ */
+
+type Variant = 'display' | 'h1' | 'h2' | 'title' | 'body' | 'bodyStrong' | 'caption' | 'overline' | 'label';
+
+const variantStyles: Record<Variant, TextStyle> = {
+  display: { fontFamily: fonts.extrabold, fontSize: 30, lineHeight: 36, letterSpacing: -0.6, color: colors.ink },
+  h1: { fontFamily: fonts.extrabold, fontSize: 24, lineHeight: 30, letterSpacing: -0.4, color: colors.ink },
+  h2: { fontFamily: fonts.bold, fontSize: 19, lineHeight: 25, letterSpacing: -0.2, color: colors.ink },
+  title: { fontFamily: fonts.bold, fontSize: 16, lineHeight: 22, color: colors.ink },
+  body: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.inkSoft },
+  bodyStrong: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 22, color: colors.ink },
+  label: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 18, color: colors.ink },
+  caption: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
+  overline: {
+    fontFamily: fonts.bold,
+    fontSize: 11.5,
+    lineHeight: 16,
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
+    color: colors.inkFaint,
+  },
+};
+
+export function T({
+  variant = 'body',
+  color,
+  center,
+  style,
+  ...props
+}: TextProps & { variant?: Variant; color?: string; center?: boolean }) {
+  return (
+    <Text
+      {...props}
+      style={[variantStyles[variant], color ? { color } : null, center && { textAlign: 'center' }, style]}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout                                                              */
+/* ------------------------------------------------------------------ */
 
 export function Screen({
   children,
   scroll = true,
+  footer,
   style,
 }: {
   children: React.ReactNode;
   scroll?: boolean;
+  footer?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const content = scroll ? (
-    <ScrollView
-      contentContainerStyle={[styles.screenContent, style]}
-      keyboardShouldPersistTaps="handled"
-    >
-      {children}
-    </ScrollView>
-  ) : (
-    <View style={[styles.screenContent, { flex: 1 }, style]}>{children}</View>
-  );
   return (
-    <SafeAreaView style={styles.screen} edges={['bottom', 'left', 'right']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.maxWidth}>{content}</View>
+    <SafeAreaView style={styles.screen} edges={['left', 'right']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {scroll ? (
+          <ScrollView
+            contentContainerStyle={[styles.screenContent, style]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={[styles.screenContent, { flex: 1 }, style]}>{children}</View>
+        )}
+        {footer ? (
+          <SafeAreaView edges={['bottom']} style={styles.footer}>
+            {footer}
+          </SafeAreaView>
+        ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+export function Row({
+  children,
+  gap = spacing.sm,
+  style,
+  align = 'center',
+}: {
+  children: React.ReactNode;
+  gap?: number;
+  style?: StyleProp<ViewStyle>;
+  align?: ViewStyle['alignItems'];
+}) {
+  return <View style={[{ flexDirection: 'row', alignItems: align, gap }, style]}>{children}</View>;
+}
+
+export function Divider({ inset = 0 }: { inset?: number }) {
+  return <View style={{ height: 1, backgroundColor: colors.line, marginLeft: inset }} />;
+}
+
+/* ------------------------------------------------------------------ */
+/* Botões                                                              */
+/* ------------------------------------------------------------------ */
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'light';
+
+const buttonPalette: Record<ButtonVariant, { bg: string; fg: string }> = {
+  primary: { bg: colors.brand, fg: colors.white },
+  secondary: { bg: colors.brandSoft, fg: colors.brandDark },
+  ghost: { bg: 'transparent', fg: colors.brand },
+  danger: { bg: colors.badSoft, fg: colors.bad },
+  light: { bg: colors.white, fg: colors.brandDark },
+};
 
 export function Button({
   title,
   onPress,
   variant = 'primary',
+  size = 'md',
   icon,
+  iconRight,
   loading,
   disabled,
   style,
@@ -62,18 +156,16 @@ export function Button({
   title: string;
   onPress: () => void;
   variant?: ButtonVariant;
-  icon?: keyof typeof Ionicons.glyphMap;
+  size?: 'md' | 'sm';
+  icon?: IconName;
+  iconRight?: IconName;
   loading?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  const palette = {
-    primary: { bg: colors.primary, fg: '#fff', border: colors.primary },
-    secondary: { bg: colors.surface, fg: colors.primary, border: colors.primary },
-    danger: { bg: colors.surface, fg: colors.danger, border: colors.danger },
-    ghost: { bg: 'transparent', fg: colors.primary, border: 'transparent' },
-  }[variant];
+  const p = buttonPalette[variant];
   const isDisabled = disabled || loading;
+  const small = size === 'sm';
   return (
     <Pressable
       accessibilityRole="button"
@@ -82,89 +174,237 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: palette.bg, borderColor: palette.border },
-        pressed && { opacity: 0.85 },
-        isDisabled && { opacity: 0.5 },
+        small && styles.buttonSm,
+        { backgroundColor: p.bg },
+        pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
+        isDisabled && { opacity: 0.45 },
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={palette.fg} />
+        <ActivityIndicator color={p.fg} />
       ) : (
         <>
-          {icon && <Ionicons name={icon} size={20} color={palette.fg} />}
-          <Text style={[styles.buttonText, { color: palette.fg }]}>{title}</Text>
+          {icon && <Ionicons name={icon} size={small ? 16 : 19} color={p.fg} />}
+          <Text style={[styles.buttonText, small && { fontSize: 14 }, { color: p.fg }]}>{title}</Text>
+          {iconRight && <Ionicons name={iconRight} size={small ? 16 : 19} color={p.fg} />}
         </>
       )}
     </Pressable>
   );
 }
 
+export function IconButton({
+  icon,
+  onPress,
+  label,
+  tone = 'brand',
+  size = 44,
+}: {
+  icon: IconName;
+  onPress: () => void;
+  label: string;
+  tone?: Tone;
+  size?: number;
+}) {
+  const c = toneColors(tone);
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => [
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: c.bg,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        pressed && { opacity: 0.8 },
+      ]}
+    >
+      <Ionicons name={icon} size={size * 0.45} color={c.fg} />
+    </Pressable>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Formulário                                                          */
+/* ------------------------------------------------------------------ */
+
 export function Field({
   label,
   error,
+  icon,
+  hint,
   ...props
-}: TextInputProps & { label: string; error?: string }) {
+}: TextInputProps & { label?: string; error?: string; icon?: IconName; hint?: string }) {
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        placeholderTextColor={colors.textMuted}
-        accessibilityLabel={label}
-        {...props}
+    <View style={{ gap: 6 }}>
+      {label ? <T variant="label">{label}</T> : null}
+      <View
         style={[
-          styles.input,
-          props.multiline && { minHeight: 96, textAlignVertical: 'top' },
-          error ? { borderColor: colors.danger } : null,
-          props.style,
+          styles.inputWrap,
+          focused && styles.inputFocused,
+          error ? { borderColor: colors.bad } : null,
+          props.multiline && { alignItems: 'flex-start' },
         ]}
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      >
+        {icon && (
+          <Ionicons
+            name={icon}
+            size={18}
+            color={focused ? colors.brand : colors.inkFaint}
+            style={props.multiline ? { marginTop: 14 } : undefined}
+          />
+        )}
+        <TextInput
+          placeholderTextColor={colors.inkFaint}
+          accessibilityLabel={label ?? props.placeholder}
+          {...props}
+          onFocus={(e) => {
+            setFocused(true);
+            props.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            props.onBlur?.(e);
+          }}
+          style={[
+            styles.input,
+            props.multiline && { minHeight: 104, textAlignVertical: 'top', paddingTop: 13 },
+            Platform.OS === 'web' && ({ outlineStyle: 'none' } as object),
+            props.style,
+          ]}
+        />
+      </View>
+      {error ? (
+        <Row gap={4}>
+          <Ionicons name="alert-circle" size={14} color={colors.bad} />
+          <T variant="caption" color={colors.bad} style={{ flex: 1 }}>
+            {error}
+          </T>
+        </Row>
+      ) : hint ? (
+        <T variant="caption" color={colors.inkFaint}>
+          {hint}
+        </T>
+      ) : null}
     </View>
   );
 }
+
+export function Segmented<K extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { key: K; label: string }[];
+  value: K;
+  onChange: (k: K) => void;
+}) {
+  return (
+    <View style={styles.segmented}>
+      {options.map((o) => {
+        const active = o.key === value;
+        return (
+          <Pressable
+            key={o.key}
+            onPress={() => onChange(o.key)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            style={[styles.segment, active && styles.segmentActive]}
+          >
+            <Text style={[styles.segmentText, active && { color: colors.ink }]}>{o.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Superfícies                                                         */
+/* ------------------------------------------------------------------ */
 
 export function Card({
   children,
   onPress,
   style,
+  flat,
 }: {
   children: React.ReactNode;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
+  flat?: boolean;
 }) {
+  const base = [styles.card, !flat && shadow, flat && styles.cardFlat];
   if (onPress) {
     return (
       <Pressable
         accessibilityRole="button"
         onPress={onPress}
-        style={({ pressed }) => [styles.card, pressed && { opacity: 0.9 }, style]}
+        style={({ pressed }) => [...base, pressed && { opacity: 0.93, transform: [{ scale: 0.995 }] }, style]}
       >
         {children}
       </Pressable>
     );
   }
-  return <View style={[styles.card, style]}>{children}</View>;
+  return <View style={[...base, style]}>{children}</View>;
 }
 
-export function ScoreBadge({ score, size = 'md' }: { score: number; size?: 'md' | 'lg' }) {
-  const c = scoreColor(score);
-  const big = size === 'lg';
+export function IconBubble({
+  icon,
+  tone = 'brand',
+  size = 40,
+  solid,
+}: {
+  icon: IconName;
+  tone?: Tone;
+  size?: number;
+  solid?: boolean;
+}) {
+  const c = toneColors(tone);
   return (
     <View
-      accessibilityLabel={`Nota de acessibilidade ${score} de 100`}
-      style={[
-        styles.badge,
-        { backgroundColor: c.bg, borderColor: c.fg },
-        big && { width: 84, height: 84, borderRadius: 42 },
-      ]}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size * 0.36,
+        backgroundColor: solid ? c.fg : c.bg,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
-      <Text style={[styles.badgeScore, { color: c.fg }, big && { fontSize: 30 }]}>{score}</Text>
-      <Text style={[styles.badgeLabel, { color: c.fg }]}>nota</Text>
+      <Ionicons name={icon} size={size * 0.5} color={solid ? colors.white : c.fg} />
     </View>
   );
 }
 
+export function Pill({
+  text,
+  tone = 'neutral',
+  icon,
+  style,
+}: {
+  text: string;
+  tone?: Tone;
+  icon?: IconName;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const c = toneColors(tone);
+  return (
+    <View style={[styles.pill, { backgroundColor: c.bg }, style]}>
+      {icon && <Ionicons name={icon} size={13} color={c.fg} />}
+      <Text style={[styles.pillText, { color: c.fg }]}>{text}</Text>
+    </View>
+  );
+}
+
+/** Mantido por compatibilidade. */
 export function Tag({
   text,
   tone = 'neutral',
@@ -172,21 +412,171 @@ export function Tag({
 }: {
   text: string;
   tone?: 'neutral' | 'success' | 'warning' | 'danger';
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: IconName;
 }) {
-  const t = {
-    neutral: { bg: colors.primaryLight, fg: colors.primaryDark },
-    success: { bg: colors.successLight, fg: colors.success },
-    warning: { bg: colors.warningLight, fg: colors.warning },
-    danger: { bg: colors.dangerLight, fg: colors.danger },
-  }[tone];
+  const map = { neutral: 'brand', success: 'good', warning: 'warn', danger: 'bad' } as const;
+  return <Pill text={text} tone={map[tone]} icon={icon} />;
+}
+
+export function Banner({
+  tone = 'brand',
+  icon,
+  title,
+  text,
+  actionLabel,
+  onPress,
+}: {
+  tone?: Tone;
+  icon: IconName;
+  title: string;
+  text?: string;
+  actionLabel?: string;
+  onPress?: () => void;
+}) {
+  const c = toneColors(tone);
+  const content = (
+    <Row align="flex-start" gap={spacing.md}>
+      <IconBubble icon={icon} tone={tone} size={36} solid />
+      <View style={{ flex: 1, gap: 2 }}>
+        <T variant="title" style={{ fontSize: 15 }}>
+          {title}
+        </T>
+        {text ? <T variant="caption">{text}</T> : null}
+        {actionLabel ? (
+          <Row gap={4} style={{ marginTop: 6 }}>
+            <Text style={[styles.bannerAction, { color: c.fg }]}>{actionLabel}</Text>
+            <Ionicons name="arrow-forward" size={14} color={c.fg} />
+          </Row>
+        ) : null}
+      </View>
+    </Row>
+  );
+  const style = [styles.banner, { backgroundColor: c.bg }];
+  return onPress ? (
+    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [style, pressed && { opacity: 0.9 }]}>
+      {content}
+    </Pressable>
+  ) : (
+    <View style={style}>{content}</View>
+  );
+}
+
+export function SectionHeader({
+  title,
+  action,
+  onAction,
+}: {
+  title: string;
+  action?: string;
+  onAction?: () => void;
+}) {
   return (
-    <View style={[styles.tag, { backgroundColor: t.bg }]}>
-      {icon && <Ionicons name={icon} size={14} color={t.fg} />}
-      <Text style={[styles.tagText, { color: t.fg }]}>{text}</Text>
+    <Row style={{ justifyContent: 'space-between', marginTop: spacing.sm }}>
+      <T variant="overline">{title}</T>
+      {action && onAction ? (
+        <Pressable onPress={onAction} hitSlop={8}>
+          <Text style={styles.sectionAction}>{action}</Text>
+        </Pressable>
+      ) : null}
+    </Row>
+  );
+}
+
+/** Mantido por compatibilidade. */
+export function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <SectionHeader title={String(children)} />;
+}
+
+export function ListRow({
+  icon,
+  tone = 'brand',
+  title,
+  subtitle,
+  onPress,
+  right,
+  danger,
+}: {
+  icon: IconName;
+  tone?: Tone;
+  title: string;
+  subtitle?: string;
+  onPress?: () => void;
+  right?: React.ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      style={({ pressed }) => [styles.listRow, pressed && { backgroundColor: colors.bg }]}
+    >
+      <IconBubble icon={icon} tone={danger ? 'bad' : tone} size={38} />
+      <View style={{ flex: 1 }}>
+        <T variant="bodyStrong" color={danger ? colors.bad : colors.ink}>
+          {title}
+        </T>
+        {subtitle ? <T variant="caption">{subtitle}</T> : null}
+      </View>
+      {right ?? (onPress ? <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} /> : null)}
+    </Pressable>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Nota de acessibilidade                                              */
+/* ------------------------------------------------------------------ */
+
+export function ScoreRing({
+  score,
+  blocked,
+  size = 58,
+  stroke,
+}: {
+  score: number;
+  blocked?: boolean;
+  size?: number;
+  stroke?: number;
+}) {
+  const c = toneColors(scoreTone(score, blocked));
+  const sw = stroke ?? Math.max(5, size * 0.1);
+  const r = (size - sw) / 2;
+  const circ = 2 * Math.PI * r;
+  const progress = Math.max(0.02, score / 100);
+  return (
+    <View
+      style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
+      accessibilityLabel={`Nota de acessibilidade ${score} de 100`}
+    >
+      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.bg} strokeWidth={sw} fill={colors.white} />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke={c.fg}
+          strokeWidth={sw}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${circ * progress} ${circ}`}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <Text style={{ fontFamily: fonts.extrabold, fontSize: size * 0.32, color: c.fg, letterSpacing: -0.5 }}>
+        {score}
+      </Text>
     </View>
   );
 }
+
+/** Mantido por compatibilidade. */
+export function ScoreBadge({ score, size = 'md' }: { score: number; size?: 'md' | 'lg' }) {
+  return <ScoreRing score={score} size={size === 'lg' ? 88 : 58} />;
+}
+
+/* ------------------------------------------------------------------ */
+/* Estados                                                             */
+/* ------------------------------------------------------------------ */
 
 export function EmptyState({
   icon,
@@ -194,99 +584,126 @@ export function EmptyState({
   message,
   action,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   title: string;
   message: string;
   action?: React.ReactNode;
 }) {
   return (
     <View style={styles.empty}>
-      <Ionicons name={icon} size={48} color={colors.textMuted} />
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptyMessage}>{message}</Text>
-      {action}
+      <View style={styles.emptyHalo}>
+        <IconBubble icon={icon} size={64} />
+      </View>
+      <T variant="h2" center>
+        {title}
+      </T>
+      <T variant="body" center style={{ maxWidth: 300 }}>
+        {message}
+      </T>
+      {action ? <View style={{ marginTop: spacing.md, alignSelf: 'stretch' }}>{action}</View> : null}
     </View>
   );
-}
-
-export function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <Text style={styles.sectionTitle}>{children}</Text>;
 }
 
 export function Loading() {
   return (
     <View style={styles.loading}>
-      <ActivityIndicator size="large" color={colors.primary} />
+      <ActivityIndicator size="large" color={colors.brand} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  maxWidth: { flex: 1, width: '100%', maxWidth: 640, alignSelf: 'center' },
-  screenContent: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
+  screen: { flex: 1, backgroundColor: colors.bg },
+  screenContent: {
+    padding: spacing.xl,
+    gap: spacing.lg,
+    paddingBottom: spacing.xxxl,
+    width: '100%',
+    maxWidth: 680,
+    alignSelf: 'center',
+  },
+  footer: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+    gap: spacing.sm,
+  },
   button: {
-    minHeight: 50,
+    minHeight: 54,
     borderRadius: radius.md,
-    borderWidth: 1.5,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
   },
-  buttonText: { fontSize: 16, fontWeight: '700' },
-  field: { gap: spacing.xs },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
-  input: {
+  buttonSm: { minHeight: 40, paddingHorizontal: spacing.lg, borderRadius: radius.sm },
+  buttonText: { fontFamily: fonts.bold, fontSize: 15.5 },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
+    borderColor: colors.line,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: 16,
-    color: colors.text,
   },
-  error: { color: colors.danger, fontSize: 13 },
+  inputFocused: { borderColor: colors.brand },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 15,
+    fontFamily: fonts.medium,
+    color: colors.ink,
+  },
+  segmented: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    padding: 4,
+  },
+  segment: { flex: 1, paddingVertical: 9, borderRadius: radius.sm, alignItems: 'center' },
+  segmentActive: { backgroundColor: colors.surface, ...(shadow as object) },
+  segmentText: { fontFamily: fonts.semibold, fontSize: 13.5, color: colors.inkSoft },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.sm,
+    gap: spacing.md,
   },
-  badge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeScore: { fontSize: 20, fontWeight: '800' },
-  badgeLabel: { fontSize: 10, fontWeight: '600', marginTop: -2 },
-  tag: {
+  cardFlat: { borderWidth: 1, borderColor: colors.line },
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: radius.pill,
     alignSelf: 'flex-start',
   },
-  tagText: { fontSize: 12, fontWeight: '600' },
-  empty: { alignItems: 'center', padding: spacing.xxl, gap: spacing.sm },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  emptyMessage: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: spacing.sm,
+  pillText: { fontFamily: fonts.semibold, fontSize: 12 },
+  banner: { borderRadius: radius.lg, padding: spacing.lg },
+  bannerAction: { fontFamily: fonts.bold, fontSize: 13 },
+  sectionAction: { fontFamily: fonts.bold, fontSize: 13, color: colors.brand },
+  listRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  empty: { alignItems: 'center', paddingVertical: spacing.xxxl, paddingHorizontal: spacing.lg, gap: spacing.sm },
+  emptyHalo: {
+    padding: 14,
+    borderRadius: 40,
+    backgroundColor: colors.surface,
+    marginBottom: spacing.sm,
+    ...(shadow as object),
+  },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
 });
