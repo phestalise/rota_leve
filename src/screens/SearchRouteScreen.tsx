@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, Field, Screen, SectionTitle } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
+import { alertMessage, getRouteAlerts, RouteAlert } from '../services/alerts';
 import { profileIcon, profileLabel } from '../services/profiles';
 import { DESTINATION_SUGGESTIONS, ORIGIN_SUGGESTIONS } from '../services/stations';
 import { colors, radius, spacing } from '../theme';
@@ -16,6 +17,13 @@ export default function SearchRouteScreen() {
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [errors, setErrors] = useState<{ origin?: string; destination?: string }>({});
+  const [alerts, setAlerts] = useState<RouteAlert[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) getRouteAlerts(user.id).then(setAlerts);
+    }, [user]),
+  );
 
   function handleSearch() {
     const e: typeof errors = {};
@@ -48,6 +56,23 @@ export default function SearchRouteScreen() {
         </Text>
         <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
       </Pressable>
+
+      {alerts.length > 0 && (
+        <Pressable
+          style={styles.alert}
+          onPress={() => navigation.navigate('Tabs', { screen: 'MinhasRotas' })}
+          accessibilityRole="button"
+        >
+          <Ionicons name="notifications" size={22} color={colors.danger} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.alertTitle}>Aviso em rota salva: {alerts[0].saved.name}</Text>
+            <Text style={styles.alertText}>
+              {alertMessage(alerts[0].reports[0].place, alerts[0].reports[0].report)} Toque para ver
+              alternativas.
+            </Text>
+          </View>
+        </Pressable>
+      )}
 
       <Card>
         <Field
@@ -102,6 +127,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   profileText: { flex: 1, color: colors.primaryDark },
+  alert: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+    backgroundColor: colors.dangerLight,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    padding: spacing.md,
+    borderRadius: radius.md,
+  },
+  alertTitle: { fontWeight: '800', color: colors.danger },
+  alertText: { color: colors.text, fontSize: 13 },
   swap: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
   swapText: { color: colors.primary, fontWeight: '600' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

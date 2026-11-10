@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button, Card, Field, Screen } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AuthStackParamList } from '../navigation/types';
-import { TEST_USER } from '../storage/seed';
+import { SECOND_TEST_USER, TEST_USER } from '../storage/seed';
 import { colors, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -76,6 +76,9 @@ export default function LoginScreen({ navigation }: Props) {
         <Text style={styles.hintTitle}>Usuário de teste</Text>
         <Text style={styles.hintText}>E-mail: {TEST_USER.email}</Text>
         <Text style={styles.hintText}>Senha: {TEST_USER.password}</Text>
+        <Text style={styles.hintMuted}>
+          Outro usuário (para confirmar relatos): {SECOND_TEST_USER.email} / {SECOND_TEST_USER.password}
+        </Text>
         <Button
           title="Preencher dados de teste"
           variant="secondary"
@@ -106,4 +109,5 @@ const styles = StyleSheet.create({
   hint: { backgroundColor: colors.primaryLight, borderColor: colors.primaryLight },
   hintTitle: { fontWeight: '700', color: colors.primaryDark },
   hintText: { color: colors.text },
+  hintMuted: { color: colors.textMuted, fontSize: 12 },
 });
