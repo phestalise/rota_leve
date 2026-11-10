@@ -8,8 +8,11 @@ import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import MyRoutesScreen from '../screens/MyRoutesScreen';
 import MobilityProfileScreen from '../screens/MobilityProfileScreen';
+import NewReportScreen from '../screens/NewReportScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import ReportDetailScreen from '../screens/ReportDetailScreen';
+import ReportsListScreen from '../screens/ReportsListScreen';
 import RouteDetailScreen from '../screens/RouteDetailScreen';
 import RouteResultsScreen from '../screens/RouteResultsScreen';
 import SearchRouteScreen from '../screens/SearchRouteScreen';
@@ -52,6 +55,7 @@ function Tabs() {
       })}
     >
       <Tab.Screen name="Buscar" component={SearchRouteScreen} options={{ title: 'Buscar rota' }} />
+      <Tab.Screen name="Relatos" component={ReportsListScreen} options={{ title: 'Relatos' }} />
       <Tab.Screen name="MinhasRotas" component={MyRoutesScreen} options={{ title: 'Minhas rotas' }} />
       <Tab.Screen name="Perfil" component={ProfileScreen} options={{ title: 'Perfil' }} />
     </Tab.Navigator>
@@ -96,6 +100,12 @@ export default function AppNavigator() {
             name="RouteDetail"
             component={RouteDetailScreen}
             options={{ title: 'Detalhe da rota' }}
+          />
+          <AppStack.Screen name="NewReport" component={NewReportScreen} options={{ title: 'Novo relato' }} />
+          <AppStack.Screen
+            name="ReportDetail"
+            component={ReportDetailScreen}
+            options={{ title: 'Detalhe do relato' }}
           />
         </AppStack.Navigator>
       )}
