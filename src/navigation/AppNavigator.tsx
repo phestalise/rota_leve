@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { Loading } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
+import AboutScreen from '../screens/AboutScreen';
 import LoginScreen from '../screens/LoginScreen';
 import MyRoutesScreen from '../screens/MyRoutesScreen';
 import MobilityProfileScreen from '../screens/MobilityProfileScreen';
@@ -101,6 +102,7 @@ export default function AppNavigator() {
             component={RouteDetailScreen}
             options={{ title: 'Detalhe da rota' }}
           />
+          <AppStack.Screen name="About" component={AboutScreen} options={{ title: 'Sobre o App' }} />
           <AppStack.Screen name="NewReport" component={NewReportScreen} options={{ title: 'Novo relato' }} />
           <AppStack.Screen
             name="ReportDetail"
