@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Field, Screen, SectionTitle } from '../components/ui';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { alertMessage, getRouteAlerts, RouteAlert } from '../services/alerts';
@@ -13,11 +14,13 @@ import { colors, radius, spacing } from '../theme';
 
 export default function SearchRouteScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [errors, setErrors] = useState<{ origin?: string; destination?: string }>({});
   const [alerts, setAlerts] = useState<RouteAlert[]>([]);
+  const [focused, setFocused] = useState<'origin' | 'destination'>('origin');
 
   useFocusEffect(
     useCallback(() => {
@@ -42,113 +45,249 @@ export default function SearchRouteScreen() {
     setDestination(origin);
   }
 
+  function pickSuggestion(value: string) {
+    if (focused === 'origin') {
+      setOrigin(value);
+      setFocused('destination');
+    } else {
+      setDestination(value);
+    }
+    setErrors({});
+  }
+
+  const suggestions = focused === 'origin' ? ORIGIN_SUGGESTIONS : DESTINATION_SUGGESTIONS;
+  const firstName = user?.name.split(' ')[0];
+
   return (
-    <Screen>
-      <Pressable
-        style={styles.profileBanner}
-        onPress={() => navigation.navigate('ProfileSetup', { firstTime: false })}
-        accessibilityRole="button"
-        accessibilityLabel="Editar perfil de mobilidade"
-      >
-        <Ionicons name={profileIcon(user?.profile?.type)} size={22} color={colors.primaryDark} />
-        <Text style={styles.profileText}>
-          Rotas avaliadas para: <Text style={{ fontWeight: '800' }}>{profileLabel(user?.profile?.type)}</Text>
-        </Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
-      </Pressable>
-
-      {alerts.length > 0 && (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: spacing.xxl }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={[styles.hero, { paddingTop: insets.top + spacing.xl }]}>
+        <Text style={styles.hello}>Olá, {firstName}</Text>
+        <Text style={styles.heroTitle}>Para onde vamos hoje?</Text>
         <Pressable
-          style={styles.alert}
-          onPress={() => navigation.navigate('Tabs', { screen: 'MinhasRotas' })}
+          style={styles.profileChip}
+          onPress={() => navigation.navigate('ProfileSetup', { firstTime: false })}
           accessibilityRole="button"
+          accessibilityLabel="Editar perfil de mobilidade"
         >
-          <Ionicons name="notifications" size={22} color={colors.danger} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.alertTitle}>Aviso em rota salva: {alerts[0].saved.name}</Text>
-            <Text style={styles.alertText}>
-              {alertMessage(alerts[0].reports[0].place, alerts[0].reports[0].report)} Toque para ver
-              alternativas.
-            </Text>
+          <Ionicons name={profileIcon(user?.profile?.type)} size={16} color="#fff" />
+          <Text style={styles.profileChipText}>{profileLabel(user?.profile?.type)}</Text>
+          <Ionicons name="create-outline" size={14} color="#fff" />
+        </Pressable>
+      </View>
+
+      <View style={styles.body}>
+        <View style={styles.searchCard}>
+          <View style={styles.tripRow}>
+            <View style={styles.rail}>
+              <View style={[styles.dot, { borderColor: colors.primary }]} />
+              <View style={styles.railLine} />
+              <Ionicons name="location" size={18} color={colors.danger} />
+            </View>
+            <View style={{ flex: 1, gap: spacing.sm }}>
+              <TextInput
+                value={origin}
+                onChangeText={(t) => {
+                  setOrigin(t);
+                  setErrors({});
+                }}
+                onFocus={() => setFocused('origin')}
+                placeholder="De onde você sai?"
+                placeholderTextColor={colors.textMuted}
+                style={[styles.input, focused === 'origin' && styles.inputFocused, errors.origin && styles.inputError]}
+                accessibilityLabel="Origem"
+              />
+              <TextInput
+                value={destination}
+                onChangeText={(t) => {
+                  setDestination(t);
+                  setErrors({});
+                }}
+                onFocus={() => setFocused('destination')}
+                onSubmitEditing={handleSearch}
+                placeholder="Para onde você vai?"
+                placeholderTextColor={colors.textMuted}
+                style={[
+                  styles.input,
+                  focused === 'destination' && styles.inputFocused,
+                  errors.destination && styles.inputError,
+                ]}
+                accessibilityLabel="Destino"
+              />
+            </View>
+            <Pressable onPress={swap} style={styles.swap} accessibilityLabel="Inverter origem e destino">
+              <Ionicons name="swap-vertical" size={20} color={colors.primary} />
+            </Pressable>
           </View>
-        </Pressable>
-      )}
+          {errors.origin || errors.destination ? (
+            <Text style={styles.error}>{errors.origin ?? errors.destination}</Text>
+          ) : null}
+          <Button title="Buscar rotas acessíveis" icon="search" onPress={handleSearch} />
+        </View>
 
-      <Card>
-        <Field
-          label="Origem"
-          value={origin}
-          onChangeText={setOrigin}
-          placeholder="Ex.: Tatuapé"
-          error={errors.origin}
-        />
-        <Pressable onPress={swap} style={styles.swap} accessibilityLabel="Inverter origem e destino">
-          <Ionicons name="swap-vertical" size={20} color={colors.primary} />
-          <Text style={styles.swapText}>Inverter</Text>
-        </Pressable>
-        <Field
-          label="Destino"
-          value={destination}
-          onChangeText={setDestination}
-          placeholder="Ex.: Hospital São Paulo"
-          error={errors.destination}
-          onSubmitEditing={handleSearch}
-        />
-        <Button title="Buscar rotas acessíveis" icon="search" onPress={handleSearch} />
-      </Card>
+        <Text style={styles.section}>
+          {focused === 'origin' ? 'Sair de' : 'Ir para'}
+        </Text>
+        <View style={styles.suggestions}>
+          {suggestions.map((s) => (
+            <Pressable key={s} style={styles.suggestion} onPress={() => pickSuggestion(s)}>
+              <View style={styles.suggestionIcon}>
+                <Ionicons
+                  name={focused === 'origin' ? 'subway-outline' : 'medkit-outline'}
+                  size={16}
+                  color={colors.primary}
+                />
+              </View>
+              <Text style={styles.suggestionText} numberOfLines={1}>
+                {s}
+              </Text>
+              <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
+            </Pressable>
+          ))}
+        </View>
 
-      <SectionTitle>Sugestões de origem</SectionTitle>
-      <View style={styles.chips}>
-        {ORIGIN_SUGGESTIONS.map((s) => (
-          <Pressable key={s} style={styles.chip} onPress={() => setOrigin(s)}>
-            <Text style={styles.chipText}>{s}</Text>
-          </Pressable>
-        ))}
+        {alerts.length > 0 && (
+          <>
+            <Text style={styles.section}>Avisos</Text>
+            <Pressable
+              style={styles.alert}
+              onPress={() => navigation.navigate('Tabs', { screen: 'MinhasRotas' })}
+              accessibilityRole="button"
+            >
+              <View style={styles.alertIcon}>
+                <Ionicons name="notifications" size={20} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.alertTitle}>{alerts[0].saved.name}</Text>
+                <Text style={styles.alertText}>
+                  {alertMessage(alerts[0].reports[0].place, alerts[0].reports[0].report)}
+                </Text>
+                <Text style={styles.alertLink}>Ver alternativas →</Text>
+              </View>
+            </Pressable>
+          </>
+        )}
       </View>
-      <SectionTitle>Sugestões de destino</SectionTitle>
-      <View style={styles.chips}>
-        {DESTINATION_SUGGESTIONS.map((s) => (
-          <Pressable key={s} style={styles.chip} onPress={() => setDestination(s)}>
-            <Text style={styles.chipText}>{s}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </Screen>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  profileBanner: {
+  container: { flex: 1, backgroundColor: colors.background },
+  hero: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: 64,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    gap: 4,
+  },
+  hello: { color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: '600' },
+  heroTitle: { color: '#fff', fontSize: 26, fontWeight: '800' },
+  profileChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.primaryLight,
-    padding: spacing.md,
-    borderRadius: radius.md,
+    gap: 6,
+    alignSelf: 'flex-start',
+    marginTop: spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
   },
-  profileText: { flex: 1, color: colors.primaryDark },
-  alert: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'center',
-    backgroundColor: colors.dangerLight,
-    borderWidth: 1,
-    borderColor: colors.danger,
-    padding: spacing.md,
-    borderRadius: radius.md,
-  },
-  alertTitle: { fontWeight: '800', color: colors.danger },
-  alertText: { color: colors.text, fontSize: 13 },
-  swap: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
-  swapText: { color: colors.primary, fontWeight: '600' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
+  profileChipText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  body: { paddingHorizontal: spacing.lg, marginTop: -44, gap: spacing.md },
+  searchCard: {
     backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
+    shadowColor: '#0B3D33',
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  tripRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  rail: { alignItems: 'center', width: 20, paddingVertical: 14 },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 3, backgroundColor: '#fff' },
+  railLine: { width: 2, flex: 1, minHeight: 22, backgroundColor: colors.border, marginVertical: 3 },
+  input: {
+    backgroundColor: colors.background,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.text,
+  },
+  inputFocused: { borderColor: colors.primary, backgroundColor: '#fff' },
+  inputError: { borderColor: colors.danger },
+  swap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  error: { color: colors.danger, fontWeight: '600', fontSize: 13 },
+  section: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: spacing.sm,
+  },
+  suggestions: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    overflow: 'hidden',
   },
-  chipText: { color: colors.text },
+  suggestion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.background,
+  },
+  suggestionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  suggestionText: { flex: 1, color: colors.text, fontSize: 15 },
+  alert: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    alignItems: 'flex-start',
+    backgroundColor: colors.surface,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.danger,
+    padding: spacing.lg,
+    borderRadius: radius.md,
+  },
+  alertIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertTitle: { fontWeight: '800', color: colors.text },
+  alertText: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+  alertLink: { color: colors.danger, fontWeight: '700', fontSize: 13, marginTop: 6 },
 });

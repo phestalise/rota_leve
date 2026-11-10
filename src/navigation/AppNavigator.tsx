@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
+import { Platform } from 'react-native';
 import { Loading } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import AboutScreen from '../screens/AboutScreen';
@@ -48,6 +49,7 @@ function Tabs() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarStyle: Platform.OS === 'web' ? { height: 64, paddingTop: 6, paddingBottom: 8 } : undefined,
         tabBarIcon: ({ color, size, focused }) => {
           const base = TAB_ICONS[route.name];
           const name = (focused ? base : `${base}-outline`) as keyof typeof Ionicons.glyphMap;
@@ -55,7 +57,7 @@ function Tabs() {
         },
       })}
     >
-      <Tab.Screen name="Buscar" component={SearchRouteScreen} options={{ title: 'Buscar rota' }} />
+      <Tab.Screen name="Buscar" component={SearchRouteScreen} options={{ title: 'Buscar', headerShown: false }} />
       <Tab.Screen name="Relatos" component={ReportsListScreen} options={{ title: 'Relatos' }} />
       <Tab.Screen name="MinhasRotas" component={MyRoutesScreen} options={{ title: 'Minhas rotas' }} />
       <Tab.Screen name="Perfil" component={ProfileScreen} options={{ title: 'Perfil' }} />
