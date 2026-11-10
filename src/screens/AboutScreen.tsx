@@ -2,29 +2,29 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Card, Screen, SectionTitle } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { Card, IconBubble, IconName, Row, Screen, SectionHeader, T } from '../components/ui';
+import { colors, fonts, radius, spacing } from '../theme';
 
-const STEPS: { icon: keyof typeof Ionicons.glyphMap; title: string; text: string }[] = [
+const STEPS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'person-circle-outline',
-    title: 'Perfil de mobilidade',
-    text: 'Você conta se está grávida, usa cadeira de rodas, anda com carrinho, é idoso(a) ou está com mobilidade reduzida. Isso define o que pesa na rota.',
+    title: 'Você conta como se desloca',
+    text: 'Gestante, cadeira de rodas, carrinho, idoso(a) ou mobilidade reduzida. Isso define o que pesa na rota.',
   },
   {
-    icon: 'navigate-circle-outline',
-    title: 'Rotas reordenadas',
-    text: 'Buscamos as opções de transporte público e damos uma nota de acessibilidade para cada uma, considerando escadas, elevadores, caminhada, ladeiras e bancos.',
+    icon: 'podium-outline',
+    title: 'A gente dá nota para cada rota',
+    text: 'Buscamos as opções de transporte e avaliamos escadas, elevadores, caminhada, ladeiras e bancos.',
   },
   {
     icon: 'megaphone-outline',
-    title: 'Comunidade',
-    text: 'Usuários relatam elevador quebrado, calçada esburacada ou ponto sem cobertura. Outros confirmam, e o relato expira se ninguém confirmar.',
+    title: 'A comunidade mantém tudo atualizado',
+    text: 'Relatos com foto, confirmados por outras pessoas. Se ninguém confirmar, o relato expira.',
   },
   {
     icon: 'notifications-outline',
-    title: 'Avisos',
-    text: 'Se algo quebrar numa rota que você salvou, o app avisa e sugere alternativas.',
+    title: 'Você é avisado(a) a tempo',
+    text: 'Se algo quebrar numa rota salva, o app avisa e mostra alternativas.',
   },
 ];
 
@@ -33,77 +33,99 @@ export default function AboutScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
+        <View style={[styles.circle, { width: 180, height: 180, top: -60, right: -50 }]} />
         <View style={styles.logo}>
-          <Ionicons name="walk" size={36} color="#fff" />
+          <Ionicons name="walk" size={28} color={colors.brand} />
         </View>
-        <Text style={styles.title}>Rota Leve</Text>
-        <Text style={styles.subtitle}>
-          Rotas de transporte público avaliadas para gestantes, pessoas com carrinho de bebê, idosos,
-          cadeirantes e pessoas com mobilidade reduzida.
-        </Text>
+        <T variant="h1" color={colors.white}>
+          Rota Leve
+        </T>
+        <T variant="body" color="rgba(255,255,255,0.85)">
+          O caminho mais fácil, não só o mais rápido.
+        </T>
       </View>
 
-      <Card style={styles.story}>
-        <Text style={styles.storyText}>
-          “A Júlia está grávida de 8 meses e precisa ir ao pré-natal. O app comum manda ela pela
-          estação que está com o elevador quebrado há dias. No Rota Leve, essa rota cai para o fim da
-          lista e ela recebe uma alternativa com elevador funcionando e pouca caminhada.”
-        </Text>
+      <Card style={styles.quote}>
+        <Ionicons name="chatbox-ellipses" size={22} color={colors.accent} />
+        <T variant="body" color={colors.ink} style={{ fontSize: 15.5, lineHeight: 24 }}>
+          A Júlia está grávida de 8 meses e precisa ir ao pré-natal. O app comum manda ela pela estação com o
+          elevador quebrado. No Rota Leve, essa rota cai para o fim da lista e ela recebe uma alternativa com
+          elevador funcionando e pouca caminhada.
+        </T>
       </Card>
 
-      <SectionTitle>Como funciona</SectionTitle>
-      {STEPS.map((s) => (
-        <Card key={s.title} style={styles.step}>
-          <Ionicons name={s.icon} size={30} color={colors.primary} />
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={styles.stepTitle}>{s.title}</Text>
-            <Text style={styles.stepText}>{s.text}</Text>
-          </View>
-        </Card>
-      ))}
-
-      <SectionTitle>Objetivos de Desenvolvimento Sustentável</SectionTitle>
-      <Card>
-        <Text style={styles.stepText}>
-          <Text style={styles.bold}>ODS 10</Text> – Redução das desigualdades: mobilidade urbana para
-          quem mais tem dificuldade de se deslocar.
-        </Text>
-        <Text style={styles.stepText}>
-          <Text style={styles.bold}>ODS 11</Text> – Cidades e comunidades sustentáveis: transporte
-          público acessível e dados colaborativos sobre a infraestrutura.
-        </Text>
+      <SectionHeader title="Como funciona" />
+      <Card style={{ gap: spacing.lg }}>
+        {STEPS.map((s, i) => (
+          <Row key={s.title} gap={spacing.md} align="flex-start">
+            <View>
+              <IconBubble icon={s.icon} size={42} />
+              <View style={styles.stepNum}>
+                <Text style={styles.stepNumText}>{i + 1}</Text>
+              </View>
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <T variant="title" style={{ fontSize: 15 }}>
+                {s.title}
+              </T>
+              <T variant="caption">{s.text}</T>
+            </View>
+          </Row>
+        ))}
       </Card>
 
-      <SectionTitle>Tecnologia</SectionTitle>
+      <SectionHeader title="Objetivos de Desenvolvimento Sustentável" />
+      <Row gap={spacing.md} align="stretch">
+        <View style={[styles.ods, { backgroundColor: '#DD1367' }]}>
+          <Text style={styles.odsNum}>10</Text>
+          <Text style={styles.odsText}>Redução das desigualdades</Text>
+        </View>
+        <View style={[styles.ods, { backgroundColor: '#FD9D24' }]}>
+          <Text style={styles.odsNum}>11</Text>
+          <Text style={styles.odsText}>Cidades e comunidades sustentáveis</Text>
+        </View>
+      </Row>
+
+      <SectionHeader title="Tecnologia" />
       <Card>
-        <Text style={styles.stepText}>
-          App em React Native (Expo) com dados salvos no aparelho via AsyncStorage. As rotas
-          candidatas simulam a Google Directions API (modo transit) e a nota de acessibilidade é
-          calculada pela camada do Rota Leve.
-        </Text>
-        <Text style={styles.version}>Versão {version} · Global Solution 2026 · FIAP</Text>
+        <T variant="caption">
+          React Native (Expo) com dados salvos no aparelho via AsyncStorage. As rotas candidatas simulam a Google
+          Directions API (modo transit) e a nota de acessibilidade é calculada pela camada do Rota Leve.
+        </T>
+        <T variant="overline">Versão {version} · Global Solution 2026 · FIAP</T>
       </Card>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: 'center', gap: spacing.sm, marginVertical: spacing.md },
+  hero: { backgroundColor: colors.brand, borderRadius: radius.xl, padding: spacing.xl, gap: 4, overflow: 'hidden' },
+  circle: { position: 'absolute', borderRadius: 999, backgroundColor: colors.white, opacity: 0.09 },
   logo: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: colors.primary,
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
-  title: { fontSize: 26, fontWeight: '800', color: colors.primaryDark },
-  subtitle: { textAlign: 'center', color: colors.textMuted, fontSize: 15, lineHeight: 21 },
-  story: { backgroundColor: colors.primaryLight, borderColor: colors.primaryLight },
-  storyText: { fontStyle: 'italic', color: colors.primaryDark, fontSize: 15, lineHeight: 22 },
-  step: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
-  stepTitle: { fontWeight: '800', color: colors.text, fontSize: 15 },
-  stepText: { color: colors.text, fontSize: 14, lineHeight: 20 },
-  bold: { fontWeight: '800' },
-  version: { color: colors.textMuted, fontSize: 12, marginTop: spacing.sm },
+  quote: { gap: spacing.sm, borderLeftWidth: 4, borderLeftColor: colors.accent },
+  stepNum: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.white,
+  },
+  stepNumText: { fontFamily: fonts.extrabold, fontSize: 9.5, color: colors.white },
+  ods: { flex: 1, borderRadius: radius.lg, padding: spacing.lg, gap: 4 },
+  odsNum: { fontFamily: fonts.extrabold, fontSize: 30, color: colors.white },
+  odsText: { fontFamily: fonts.bold, fontSize: 13, lineHeight: 17, color: colors.white },
 });

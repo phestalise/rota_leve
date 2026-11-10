@@ -2,25 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, EmptyState, Loading, Screen } from '../components/ui';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Banner, Button, Card, EmptyState, IconBubble, Loading, Pill, Row, Screen, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { placesOf } from '../services/accessibility';
-import {
-  CATEGORY_ICONS,
-  CATEGORY_LABELS,
-  confirmReport,
-  deleteReport,
-  getReport,
-  resolveReport,
-} from '../storage/reports';
+import { CATEGORY_ICONS, CATEGORY_LABELS, confirmReport, deleteReport, getReport, resolveReport } from '../storage/reports';
 import { getSavedRoutes } from '../storage/routes';
-import { colors, radius, spacing } from '../theme';
+import { colors, fonts, radius, spacing, toneColors } from '../theme';
 import { Report } from '../types';
 import { confirmAction, notify } from '../utils/dialog';
 import { formatDate, normalize } from '../utils/id';
-import { statusTag } from './ReportsListScreen';
+import { CATEGORY_TONES, statusPill } from './ReportsListScreen';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ReportDetail'>;
 
@@ -62,6 +55,7 @@ export default function ReportDetailScreen({ route, navigation }: Props) {
   const isAuthor = report.userId === user?.id;
   const alreadyConfirmed = report.confirmations.includes(user!.id);
   const active = report.status === 'ativo';
+  const tone = CATEGORY_TONES[report.category];
 
   async function handleConfirm() {
     setBusy(true);
@@ -87,108 +81,109 @@ export default function ReportDetailScreen({ route, navigation }: Props) {
     navigation.goBack();
   }
 
-  return (
-    <Screen>
-      {report.photoUri ? (
-        <Image source={{ uri: report.photoUri }} style={styles.photo} resizeMode="cover" />
-      ) : (
-        <View style={[styles.photo, styles.photoEmpty]}>
-          <Ionicons
-            name={CATEGORY_ICONS[report.category] as keyof typeof Ionicons.glyphMap}
-            size={56}
-            color={colors.primary}
-          />
-        </View>
-      )}
-
-      <Card>
-        <Text style={styles.category}>{CATEGORY_LABELS[report.category]}</Text>
-        <View style={styles.line}>
-          <Ionicons name="location" size={16} color={colors.primaryDark} />
-          <Text style={styles.location}>{report.location}</Text>
-        </View>
-        <Text style={styles.desc}>{report.description}</Text>
-        {statusTag(report)}
-      </Card>
-
-      <Card>
-        <Info icon="person-outline" label="Relatado por" value={isAuthor ? 'Você' : report.userName} />
-        <Info icon="calendar-outline" label="Em" value={formatDate(report.createdAt)} />
-        <Info icon="time-outline" label="Válido até" value={formatDate(report.expiresAt)} />
-        <Info
-          icon="people-outline"
-          label="Confirmações"
-          value={`${report.confirmations.length} pessoa${report.confirmations.length === 1 ? '' : 's'}`}
-        />
-      </Card>
-
-      {affected.length > 0 && (
-        <Card style={styles.affected}>
-          <View style={styles.line}>
-            <Ionicons name="bookmark" size={16} color={colors.warning} />
-            <Text style={styles.affectedTitle}>Afeta suas rotas salvas</Text>
-          </View>
-          {affected.map((a) => (
-            <Text key={a} style={styles.affectedItem}>
-              • {a}
-            </Text>
-          ))}
-        </Card>
-      )}
-
-      {active && !isAuthor && (
+  const footer = active ? (
+    <Row gap={spacing.md}>
+      <Button
+        title="Resolvido"
+        variant="secondary"
+        icon="checkmark-done"
+        onPress={handleResolve}
+        style={{ flex: isAuthor ? 1 : undefined, paddingHorizontal: spacing.lg }}
+      />
+      {!isAuthor && (
         <Button
-          title={alreadyConfirmed ? 'Você já confirmou' : 'Confirmar: ainda está assim'}
-          icon="checkmark-circle-outline"
+          title={alreadyConfirmed ? 'Confirmado' : 'Ainda está assim'}
+          icon={alreadyConfirmed ? 'checkmark-circle' : 'hand-left-outline'}
           onPress={handleConfirm}
           disabled={alreadyConfirmed}
           loading={busy}
+          style={{ flex: 1 }}
         />
       )}
+    </Row>
+  ) : undefined;
+
+  return (
+    <Screen footer={footer}>
+      <View>
+        {report.photoUri ? (
+          <Image source={{ uri: report.photoUri }} style={styles.photo} resizeMode="cover" />
+        ) : (
+          <View style={[styles.photo, styles.photoEmpty, { backgroundColor: toneColors(tone).bg }]}>
+            <View style={[styles.circleDeco, { backgroundColor: toneColors(tone).fg }]} />
+            <IconBubble icon={CATEGORY_ICONS[report.category] as keyof typeof Ionicons.glyphMap} tone={tone} size={76} solid />
+            <T variant="caption" color={toneColors(tone).fg} style={{ fontFamily: fonts.semibold, marginTop: spacing.sm }}>
+              Relato sem foto
+            </T>
+          </View>
+        )}
+        <View style={styles.photoBadge}>{statusPill(report)}</View>
+      </View>
+
+      <View style={{ gap: 6 }}>
+        <Pill text={CATEGORY_LABELS[report.category]} tone={tone} icon={CATEGORY_ICONS[report.category] as keyof typeof Ionicons.glyphMap} />
+        <T variant="h1">{report.location}</T>
+        <T variant="body" color={colors.ink} style={{ fontSize: 15.5, lineHeight: 24 }}>
+          {report.description}
+        </T>
+      </View>
+
+      <Row gap={spacing.md}>
+        <Card style={styles.stat}>
+          <Text style={styles.statValue}>{report.confirmations.length}</Text>
+          <T variant="caption">confirmaç{report.confirmations.length === 1 ? 'ão' : 'ões'}</T>
+        </Card>
+        <Card style={styles.stat}>
+          <Text style={styles.statValue}>{report.confirmations.length + 1}</Text>
+          <T variant="caption">pessoas viram</T>
+        </Card>
+      </Row>
+
+      <Card style={{ gap: spacing.md }}>
+        <Info icon="person-circle-outline" label="Relatado por" value={isAuthor ? 'Você' : report.userName} />
+        <Info icon="calendar-outline" label="Quando" value={formatDate(report.createdAt)} />
+        <Info icon="hourglass-outline" label="Válido até" value={formatDate(report.expiresAt)} />
+      </Card>
+
       {active && (
-        <Button
-          title="Marcar como resolvido"
-          variant="secondary"
-          icon="checkmark-done-outline"
-          onPress={handleResolve}
-        />
+        <T variant="caption" center style={{ paddingHorizontal: spacing.lg }}>
+          Relatos expiram em 48h se ninguém confirmar. Cada confirmação garante mais 24h.
+        </T>
       )}
+
+      {affected.length > 0 && (
+        <Banner tone="warn" icon="bookmark" title="Afeta suas rotas salvas" text={affected.join(' · ')} />
+      )}
+
       {isAuthor && (
-        <Button title="Excluir relato" variant="danger" icon="trash-outline" onPress={handleDelete} />
+        <Pressable onPress={handleDelete} style={styles.delete} accessibilityRole="button">
+          <Ionicons name="trash-outline" size={16} color={colors.bad} />
+          <Text style={styles.deleteText}>Excluir relato</Text>
+        </Pressable>
       )}
     </Screen>
   );
 }
 
-function Info({
-  icon,
-  label,
-  value,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: string;
-}) {
+function Info({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
   return (
-    <View style={styles.info}>
-      <Ionicons name={icon} size={18} color={colors.textMuted} />
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
+    <Row gap={spacing.md}>
+      <Ionicons name={icon} size={20} color={colors.inkFaint} />
+      <T variant="body" style={{ flex: 1 }}>
+        {label}
+      </T>
+      <T variant="bodyStrong">{value}</T>
+    </Row>
   );
 }
 
 const styles = StyleSheet.create({
-  photo: { width: '100%', height: 220, borderRadius: radius.lg },
-  photoEmpty: { backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  category: { fontSize: 20, fontWeight: '800', color: colors.text },
-  line: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  location: { fontSize: 15, fontWeight: '700', color: colors.primaryDark, flex: 1 },
-  desc: { fontSize: 15, color: colors.text, lineHeight: 21 },
-  info: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  infoLabel: { color: colors.textMuted, flex: 1 },
-  infoValue: { color: colors.text, fontWeight: '700' },
-  affected: { backgroundColor: colors.warningLight, borderColor: colors.warning },
-  affectedTitle: { fontWeight: '800', color: colors.warning },
-  affectedItem: { color: colors.text },
+  photo: { width: '100%', height: 230, borderRadius: radius.xl },
+  photoEmpty: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden', height: 190 },
+  circleDeco: { position: 'absolute', width: 260, height: 260, borderRadius: 130, opacity: 0.07, top: -80, right: -70 },
+  photoBadge: { position: 'absolute', top: 12, left: 12 },
+  stat: { flex: 1, alignItems: 'center', gap: 0, paddingVertical: spacing.md },
+  statValue: { fontFamily: fonts.extrabold, fontSize: 26, color: colors.ink, letterSpacing: -0.5 },
+  delete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: spacing.md },
+  deleteText: { fontFamily: fonts.bold, fontSize: 14, color: colors.bad },
 });

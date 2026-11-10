@@ -3,17 +3,27 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Field, Screen, SectionTitle } from '../components/ui';
+import { Button, Field, IconBubble, Row, Screen, SectionHeader, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { CATEGORY_ICONS, CATEGORY_LABELS, createReport, REPORT_TTL_HOURS } from '../storage/reports';
-import { colors, radius, spacing } from '../theme';
+import { colors, fonts, radius, shadow, spacing } from '../theme';
 import { ReportCategory } from '../types';
 import { notify } from '../utils/dialog';
+import { CATEGORY_TONES } from './ReportsListScreen';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'NewReport'>;
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ReportCategory[];
+
+const SHORT: Record<ReportCategory, string> = {
+  elevador: 'Elevador quebrado',
+  escada_rolante: 'Escada parada',
+  calcada: 'Calçada ruim',
+  rampa: 'Rampa bloqueada',
+  cobertura: 'Sem cobertura',
+  outro: 'Outro',
+};
 
 export default function NewReportScreen({ navigation, route }: Props) {
   const { user } = useAuth();
@@ -39,16 +49,12 @@ export default function NewReportScreen({ navigation, route }: Props) {
         return;
       }
     }
-    const result = fromCamera
-      ? await ImagePicker.launchCameraAsync(options)
-      : await ImagePicker.launchImageLibraryAsync(options);
+    const result = fromCamera ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
     if (result.canceled || !result.assets?.length) return;
     const asset = result.assets[0];
     // Guardamos como data URI para a foto sobreviver no AsyncStorage (inclusive no navegador).
     const uri =
-      asset.base64 && !asset.uri.startsWith('data:')
-        ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
-        : asset.uri;
+      asset.base64 && !asset.uri.startsWith('data:') ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}` : asset.uri;
     setPhotoUri(uri);
     setErrors((e) => ({ ...e, photo: '' }));
   }
@@ -58,7 +64,7 @@ export default function NewReportScreen({ navigation, route }: Props) {
     if (!category) e.category = 'Escolha o tipo de problema.';
     if (location.trim().length < 3) e.location = 'Informe a estação, rua ou ponto.';
     if (description.trim().length < 10) e.description = 'Descreva o problema (mínimo 10 caracteres).';
-    if (!photoUri) e.photo = 'Adicione uma foto: ela ajuda outras pessoas a confirmarem o relato.';
+    if (!photoUri) e.photo = 'Adicione uma foto: ela ajuda outras pessoas a confirmarem.';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -67,30 +73,25 @@ export default function NewReportScreen({ navigation, route }: Props) {
     if (!validate()) return;
     setSaving(true);
     try {
-      const report = await createReport(user!, {
-        category: category!,
-        location,
-        description,
-        photoUri,
-      });
-      notify(
-        'Relato enviado',
-        `Obrigado! O relato fica ativo por ${REPORT_TTL_HOURS}h e é renovado a cada confirmação da comunidade.`,
-      );
+      const report = await createReport(user!, { category: category!, location, description, photoUri });
+      notify('Relato enviado', `Obrigado! Ele fica ativo por ${REPORT_TTL_HOURS}h e é renovado a cada confirmação.`);
       navigation.replace('ReportDetail', { reportId: report.id });
     } catch {
       notify('Erro', 'Não foi possível salvar o relato. Tente de novo.');
-    } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Screen>
-      <SectionTitle>Tipo de problema</SectionTitle>
+    <Screen footer={<Button title="Enviar relato" icon="paper-plane" onPress={handleSubmit} loading={saving} />}>
+      <View style={{ gap: 6 }}>
+        <T variant="h1">O que você encontrou?</T>
+        <T variant="body">Seu relato ajuda quem vem depois e muda a nota das rotas na hora.</T>
+      </View>
+
       <View style={styles.grid}>
         {CATEGORIES.map((c) => {
-          const selected = c === category;
+          const active = c === category;
           return (
             <Pressable
               key={c}
@@ -98,81 +99,84 @@ export default function NewReportScreen({ navigation, route }: Props) {
                 setCategory(c);
                 setErrors((e) => ({ ...e, category: '' }));
               }}
-              style={[styles.cat, selected && styles.catSelected]}
+              style={({ pressed }) => [styles.cat, shadow, active && styles.catActive, pressed && { opacity: 0.9 }]}
               accessibilityRole="radio"
-              accessibilityState={{ selected }}
+              accessibilityState={{ selected: active }}
+              accessibilityLabel={CATEGORY_LABELS[c]}
             >
-              <Ionicons
-                name={CATEGORY_ICONS[c] as keyof typeof Ionicons.glyphMap}
-                size={24}
-                color={selected ? '#fff' : colors.primary}
+              <IconBubble
+                icon={CATEGORY_ICONS[c] as keyof typeof Ionicons.glyphMap}
+                tone={active ? 'brand' : CATEGORY_TONES[c]}
+                solid={active}
+                size={38}
               />
-              <Text style={[styles.catText, selected && { color: '#fff' }]}>{CATEGORY_LABELS[c]}</Text>
+              <Text style={[styles.catText, active && { color: colors.brandDark }]} numberOfLines={2}>
+                {SHORT[c]}
+              </Text>
             </Pressable>
           );
         })}
       </View>
-      {errors.category ? <Text style={styles.error}>{errors.category}</Text> : null}
+      {errors.category ? (
+        <T variant="caption" color={colors.bad}>
+          {errors.category}
+        </T>
+      ) : null}
 
-      <Card>
-        <Field
-          label="Local"
-          value={location}
-          onChangeText={setLocation}
-          placeholder="Ex.: Estação Sé, Rua Vergueiro 1200"
-          error={errors.location}
-        />
-        <Field
-          label="Descrição"
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Ex.: Elevador do acesso Praça da Sé parado desde segunda."
-          multiline
-          error={errors.description}
-        />
-      </Card>
+      <SectionHeader title="Onde e como" />
+      <Field label="Local" icon="location-outline" value={location} onChangeText={setLocation} placeholder="Ex.: Estação Sé" error={errors.location} />
+      <Field
+        label="Descrição"
+        value={description}
+        onChangeText={setDescription}
+        placeholder="Ex.: Elevador do acesso Praça da Sé parado desde segunda."
+        multiline
+        error={errors.description}
+      />
 
-      <SectionTitle>Foto do problema</SectionTitle>
-      <Card>
-        {photoUri ? (
-          <View>
-            <Image source={{ uri: photoUri }} style={styles.photo} resizeMode="cover" />
-            <Pressable
-              onPress={() => setPhotoUri(undefined)}
-              style={styles.removePhoto}
-              accessibilityLabel="Remover foto"
-            >
-              <Ionicons name="close" size={18} color="#fff" />
+      <SectionHeader title="Foto" />
+      {photoUri ? (
+        <View>
+          <Image source={{ uri: photoUri }} style={styles.photo} resizeMode="cover" />
+          <Row gap={spacing.sm} style={styles.photoActions}>
+            <Pressable onPress={() => pick(false)} style={styles.photoAction}>
+              <Ionicons name="swap-horizontal" size={15} color={colors.white} />
+              <Text style={styles.photoActionText}>Trocar</Text>
             </Pressable>
-          </View>
-        ) : (
-          <View style={[styles.photo, styles.photoEmpty]}>
-            <Ionicons name="camera-outline" size={40} color={colors.textMuted} />
-            <Text style={styles.photoHint}>Fotografe a calçada, a rampa ou o elevador</Text>
-          </View>
-        )}
-        <View style={styles.photoButtons}>
-          {Platform.OS !== 'web' && (
-            <Button
-              title="Câmera"
-              variant="secondary"
-              icon="camera"
-              onPress={() => pick(true)}
-              style={{ flex: 1 }}
-            />
-          )}
-          <Button
-            title={Platform.OS === 'web' ? 'Escolher foto' : 'Galeria'}
-            variant="secondary"
-            icon="images"
-            onPress={() => pick(false)}
-            style={{ flex: 1 }}
-          />
+            <Pressable onPress={() => setPhotoUri(undefined)} style={styles.photoAction} accessibilityLabel="Remover foto">
+              <Ionicons name="trash-outline" size={15} color={colors.white} />
+            </Pressable>
+          </Row>
         </View>
-        {errors.photo ? <Text style={styles.error}>{errors.photo}</Text> : null}
-      </Card>
-
-      <Button title="Enviar relato" icon="send" onPress={handleSubmit} loading={saving} />
+      ) : (
+        <Pressable
+          onPress={() => pick(Platform.OS !== 'web')}
+          style={[styles.drop, errors.photo ? { borderColor: colors.bad } : null]}
+          accessibilityRole="button"
+          accessibilityLabel="Adicionar foto"
+        >
+          <IconBubble icon="camera" size={52} />
+          <T variant="bodyStrong">{Platform.OS === 'web' ? 'Escolher uma foto' : 'Tirar uma foto'}</T>
+          <T variant="caption" center>
+            Fotografe a calçada, a rampa ou o elevador
+          </T>
+          {Platform.OS !== 'web' && (
+            <Pressable onPress={() => pick(false)} hitSlop={8}>
+              <T variant="label" color={colors.brand}>
+                ou escolher da galeria
+              </T>
+            </Pressable>
+          )}
+        </Pressable>
+      )}
+      {errors.photo ? (
+        <Row gap={6}>
+          <Ionicons name="alert-circle" size={14} color={colors.bad} />
+          <T variant="caption" color={colors.bad} style={{ flex: 1 }}>
+            {errors.photo}
+          </T>
+        </Row>
+      ) : null}
     </Screen>
   );
 }
@@ -180,38 +184,38 @@ export default function NewReportScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   cat: {
-    width: '48%',
+    width: '31%',
     flexGrow: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  catActive: { borderColor: colors.brand, backgroundColor: '#F4FAF8' },
+  catText: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.ink },
+  photo: { width: '100%', height: 210, borderRadius: radius.lg },
+  photoActions: { position: 'absolute', top: 10, right: 10 },
+  photoAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
+    gap: 4,
+    backgroundColor: 'rgba(22,33,30,0.65)',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+  },
+  photoActionText: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.white },
+  drop: {
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-  catSelected: { backgroundColor: colors.primary },
-  catText: { flex: 1, fontWeight: '700', color: colors.primary, fontSize: 13 },
-  error: { color: colors.danger, fontWeight: '600' },
-  photo: { width: '100%', height: 200, borderRadius: radius.md },
-  photoEmpty: {
-    backgroundColor: colors.background,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  photoHint: { color: colors.textMuted, textAlign: 'center' },
-  removePhoto: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 16,
-    padding: 6,
-  },
-  photoButtons: { flexDirection: 'row', gap: spacing.sm },
 });

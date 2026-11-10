@@ -1,10 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
-import { Button, Card, Field, Screen } from '../components/ui';
+import { Pressable, View } from 'react-native';
+import Steps from '../components/Steps';
+import { Button, Field, Row, Screen, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AuthStackParamList } from '../navigation/types';
-import { colors } from '../theme';
+import { colors, radius, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
@@ -36,49 +38,70 @@ export default function RegisterScreen({ navigation }: Props) {
       await signUp(name, email, password);
     } catch (err) {
       setErrors({ form: (err as Error).message });
-    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Screen>
-      <Text style={styles.intro}>
-        Crie sua conta. Em seguida você vai configurar seu perfil de mobilidade.
-      </Text>
-      <Card>
-        <Field label="Nome completo" value={name} onChangeText={setName} error={errors.name} />
-        <Field
-          label="E-mail"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          error={errors.email}
-        />
-        <Field
-          label="Senha"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          error={errors.password}
-        />
-        <Field
-          label="Confirmar senha"
-          value={confirm}
-          onChangeText={setConfirm}
-          secureTextEntry
-          error={errors.confirm}
-        />
-        {errors.form ? <Text style={styles.error}>{errors.form}</Text> : null}
-        <Button title="Cadastrar" icon="person-add-outline" onPress={handleRegister} loading={loading} />
-        <Button title="Já tenho conta" variant="ghost" onPress={() => navigation.goBack()} />
-      </Card>
+    <Screen
+      footer={
+        <Button title="Continuar" iconRight="arrow-forward" onPress={handleRegister} loading={loading} />
+      }
+    >
+      <Steps current={1} total={2} />
+      <View style={{ gap: 6 }}>
+        <T variant="h1">Crie sua conta</T>
+        <T variant="body">Leva menos de um minuto. Depois, você conta como se desloca.</T>
+      </View>
+
+      <Field label="Nome completo" icon="person-outline" value={name} onChangeText={setName} placeholder="Como podemos te chamar?" error={errors.name} />
+      <Field
+        label="E-mail"
+        icon="mail-outline"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="seu@email.com"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        error={errors.email}
+      />
+      <Field
+        label="Senha"
+        icon="lock-closed-outline"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Mínimo 6 caracteres"
+        secureTextEntry
+        error={errors.password}
+      />
+      <Field
+        label="Confirmar senha"
+        icon="shield-checkmark-outline"
+        value={confirm}
+        onChangeText={setConfirm}
+        placeholder="Repita a senha"
+        secureTextEntry
+        error={errors.confirm}
+        onSubmitEditing={handleRegister}
+      />
+
+      {errors.form ? (
+        <Row gap={6} style={{ backgroundColor: colors.badSoft, padding: spacing.md, borderRadius: radius.sm }}>
+          <Ionicons name="alert-circle" size={16} color={colors.bad} />
+          <T variant="caption" color={colors.bad} style={{ flex: 1 }}>
+            {errors.form}
+          </T>
+        </Row>
+      ) : null}
+
+      <Row gap={4} style={{ justifyContent: 'center' }}>
+        <T variant="body">Já tem conta?</T>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+          <T variant="bodyStrong" color={colors.brand}>
+            Entrar
+          </T>
+        </Pressable>
+      </Row>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  intro: { color: colors.textMuted, fontSize: 15 },
-  error: { color: colors.danger, fontWeight: '600' },
-});

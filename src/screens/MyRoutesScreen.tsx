@@ -2,18 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { ModeStrip } from '../components/RouteCard';
-import { Button, Card, EmptyState, Loading, ScoreBadge, Screen } from '../components/ui';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ModeStrip, RouteStats } from '../components/RouteCard';
+import { Button, EmptyState, Loading, Row, ScoreRing, Screen, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { scoreRoute } from '../services/accessibility';
 import { alertMessage, getRouteAlerts, RouteAlert } from '../services/alerts';
 import { getActiveReports } from '../storage/reports';
 import { getSavedRoutes } from '../storage/routes';
-import { colors, spacing } from '../theme';
+import { colors, fonts, radius, shadow, spacing } from '../theme';
 import { SavedRoute, ScoredRoute } from '../types';
-import { formatDate } from '../utils/id';
 
 interface Item {
   saved: SavedRoute;
@@ -53,92 +52,85 @@ export default function MyRoutesScreen() {
         <EmptyState
           icon="bookmark-outline"
           title="Nenhuma rota salva"
-          message="Salve as rotas que você usa com frequência para acompanhar problemas no caminho."
-          action={
-            <Button
-              title="Buscar uma rota"
-              icon="search"
-              onPress={() => navigation.navigate('Tabs', { screen: 'Buscar' })}
-            />
-          }
+          message="Salve os trajetos que você faz sempre e a gente avisa quando algo quebrar no caminho."
+          action={<Button title="Buscar uma rota" icon="search" onPress={() => navigation.navigate('Tabs', { screen: 'Buscar' })} />}
         />
       </Screen>
     );
   }
 
+  const withAlert = items.filter((i) => i.alert).length;
+
   return (
-    <Screen>
-      {items.some((i) => i.alert) && (
-        <View style={styles.summary}>
-          <Ionicons name="notifications" size={18} color={colors.danger} />
-          <Text style={styles.summaryText}>
-            {items.filter((i) => i.alert).length} rota(s) salva(s) com problema relatado pela comunidade
-          </Text>
-        </View>
-      )}
+    <Screen style={{ paddingTop: spacing.sm }}>
+      <T variant="body" style={{ marginTop: -spacing.sm }}>
+        {withAlert > 0
+          ? `${withAlert} de ${items.length} rota${items.length > 1 ? 's' : ''} com aviso da comunidade.`
+          : 'Tudo certo nos seus trajetos por enquanto.'}
+      </T>
+
       {items.map(({ saved, current, alert }) => (
-        <Card
+        <Pressable
           key={saved.id}
           onPress={() => navigation.navigate('RouteDetail', { route: current, savedId: saved.id })}
+          style={({ pressed }) => [styles.card, shadow, pressed && { opacity: 0.94 }]}
         >
-          <View style={styles.header}>
-            <ScoreBadge score={current.score} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>{saved.name}</Text>
-              <Text style={styles.meta}>
-                {current.summary} · {current.durationMin} min
-              </Text>
-              <Text style={styles.meta}>Salva em {formatDate(saved.savedAt)}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          <View style={styles.inner}>
+            <Row gap={spacing.lg} align="flex-start">
+              <View style={{ flex: 1, gap: 4 }}>
+                <T variant="title">{saved.name}</T>
+                <T variant="caption" numberOfLines={1}>
+                  {current.summary}
+                </T>
+                <RouteStats route={current} />
+              </View>
+              <ScoreRing score={current.score} blocked={current.blocked} size={52} />
+            </Row>
+            <ModeStrip route={current} />
           </View>
-          <ModeStrip route={current} />
+
           {alert && (
             <View style={styles.alert}>
               {alert.reports.map(({ place, report }) => (
-                <View key={report.id} style={styles.alertRow}>
-                  <Ionicons name="warning" size={16} color={colors.danger} />
-                  <Text style={styles.alertText}>{alertMessage(place, report)}</Text>
-                </View>
+                <Row key={report.id} gap={8} align="flex-start">
+                  <Ionicons name="warning" size={15} color={colors.bad} style={{ marginTop: 2 }} />
+                  <T variant="caption" color={colors.ink} style={{ flex: 1, fontFamily: fonts.semibold }}>
+                    {alertMessage(place, report)}
+                  </T>
+                </Row>
               ))}
-              <Button
-                title="Ver alternativas"
-                variant="danger"
-                icon="git-branch-outline"
+              <Pressable
                 onPress={() =>
-                  navigation.navigate('RouteResults', {
-                    origin: saved.route.origin,
-                    destination: saved.route.destination,
-                  })
+                  navigation.navigate('RouteResults', { origin: saved.route.origin, destination: saved.route.destination })
                 }
-              />
+                style={styles.altBtn}
+                accessibilityRole="button"
+              >
+                <Ionicons name="git-branch-outline" size={15} color={colors.white} />
+                <Text style={styles.altText}>Ver alternativas</Text>
+              </Pressable>
             </View>
           )}
-        </Card>
+        </Pressable>
       ))}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  title: { fontSize: 16, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 13, color: colors.textMuted },
-  summary: {
+  card: { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden' },
+  inner: { padding: spacing.lg, gap: spacing.md },
+  alert: { backgroundColor: colors.badSoft, padding: spacing.lg, gap: spacing.sm },
+  altBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.dangerLight,
-    padding: spacing.md,
-    borderRadius: 12,
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.bad,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    marginTop: 4,
   },
-  summaryText: { flex: 1, color: colors.danger, fontWeight: '700' },
-  alert: {
-    backgroundColor: colors.dangerLight,
-    borderRadius: 12,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  alertRow: { flexDirection: 'row', gap: 6, alignItems: 'flex-start' },
-  alertText: { flex: 1, color: colors.danger, fontWeight: '600' },
+  altText: { fontFamily: fonts.bold, fontSize: 13, color: colors.white },
 });

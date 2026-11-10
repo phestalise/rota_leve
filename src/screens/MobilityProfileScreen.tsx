@@ -2,199 +2,219 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
-import { Button, Card, Screen, SectionTitle } from '../components/ui';
+import Steps from '../components/Steps';
+import { Button, Card, Divider, IconBubble, IconName, Row, Screen, SectionHeader, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { MOBILITY_OPTIONS, WALK_LIMITS } from '../services/profiles';
-import { colors, radius, spacing } from '../theme';
+import { colors, fonts, radius, shadow, spacing } from '../theme';
 import { MobilityProfile, MobilityType } from '../types';
 import { notify } from '../utils/dialog';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ProfileSetup'>;
 
+const SHORT_LABELS: Record<MobilityType, string> = {
+  gestante: 'Gestante',
+  cadeirante: 'Cadeira de rodas',
+  carrinho: 'Carrinho de bebê',
+  idoso: 'Idoso(a)',
+  temporaria: 'Mobilidade temporária',
+};
+
 export default function MobilityProfileScreen({ navigation, route }: Props) {
   const { user, saveProfile } = useAuth();
   const firstTime = route.params?.firstTime ?? !user?.profile;
   const [type, setType] = useState<MobilityType | undefined>(user?.profile?.type);
-  const [prefs, setPrefs] = useState<Omit<MobilityProfile, 'type'>>(
-    user?.profile ?? MOBILITY_OPTIONS[0].defaults,
-  );
+  const [prefs, setPrefs] = useState<Omit<MobilityProfile, 'type'>>(user?.profile ?? MOBILITY_OPTIONS[0].defaults);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
   function selectType(t: MobilityType) {
     setType(t);
     setError('');
-    const option = MOBILITY_OPTIONS.find((o) => o.type === t)!;
-    setPrefs(option.defaults);
+    setPrefs(MOBILITY_OPTIONS.find((o) => o.type === t)!.defaults);
   }
 
   async function handleSave() {
     if (!type) {
-      setError('Escolha pelo menos uma situação de mobilidade para continuar.');
+      setError('Escolha a situação que mais combina com você para continuar.');
       return;
     }
     setSaving(true);
-    await saveProfile({ type, ...prefs });
-    setSaving(false);
-    if (!firstTime) {
-      notify('Perfil atualizado', 'As próximas rotas serão avaliadas com as novas preferências.');
-      navigation.goBack();
+    try {
+      await saveProfile({ type, ...prefs });
+      if (!firstTime) {
+        notify('Perfil atualizado', 'As próximas rotas serão avaliadas com as novas preferências.');
+        navigation.goBack();
+      }
+    } finally {
+      setSaving(false);
     }
   }
 
-  return (
-    <Screen>
-      <Text style={styles.intro}>
-        {firstTime
-          ? `Olá, ${user?.name.split(' ')[0]}! Conte para a gente como você se desloca. Isso define o que pesa na nota de cada rota.`
-          : 'Ajuste suas preferências. As notas das rotas são recalculadas com base nelas.'}
-      </Text>
+  const selected = MOBILITY_OPTIONS.find((o) => o.type === type);
 
-      <SectionTitle>Minha situação</SectionTitle>
-      {MOBILITY_OPTIONS.map((option) => {
-        const selected = option.type === type;
-        return (
-          <Pressable
-            key={option.type}
-            accessibilityRole="radio"
-            accessibilityState={{ selected }}
-            onPress={() => selectType(option.type)}
-            style={[styles.option, selected && styles.optionSelected]}
-          >
-            <Ionicons
-              name={option.icon}
-              size={28}
-              color={selected ? colors.primary : colors.textMuted}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.optionLabel}>{option.label}</Text>
-              <Text style={styles.optionDesc}>{option.description}</Text>
-            </View>
-            <Ionicons
-              name={selected ? 'radio-button-on' : 'radio-button-off'}
-              size={22}
-              color={selected ? colors.primary : colors.border}
-            />
-          </Pressable>
-        );
-      })}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+  return (
+    <Screen
+      footer={
+        <Button
+          title={firstTime ? 'Salvar e começar' : 'Salvar perfil'}
+          icon={firstTime ? undefined : 'checkmark'}
+          iconRight={firstTime ? 'arrow-forward' : undefined}
+          onPress={handleSave}
+          loading={saving}
+        />
+      }
+    >
+      {firstTime && <Steps current={2} total={2} />}
+      <View style={{ gap: 6 }}>
+        <T variant="h1">{firstTime ? `Como você se desloca, ${user?.name.split(' ')[0]}?` : 'Seu perfil de mobilidade'}</T>
+        <T variant="body">Isso define o que pesa na nota de cada rota. Você pode mudar quando quiser.</T>
+      </View>
+
+      <View style={styles.grid}>
+        {MOBILITY_OPTIONS.map((o) => {
+          const active = o.type === type;
+          return (
+            <Pressable
+              key={o.type}
+              onPress={() => selectType(o.type)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: active }}
+              accessibilityLabel={o.label}
+              style={({ pressed }) => [styles.option, active && styles.optionActive, pressed && { opacity: 0.9 }]}
+            >
+              <IconBubble icon={o.icon} size={44} tone={active ? 'brand' : 'neutral'} solid={active} />
+              <Text style={[styles.optionLabel, active && { color: colors.brandDark }]}>{SHORT_LABELS[o.type]}</Text>
+              {active && (
+                <View style={styles.check}>
+                  <Ionicons name="checkmark" size={13} color={colors.white} />
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+      {error ? (
+        <Row gap={6}>
+          <Ionicons name="alert-circle" size={16} color={colors.bad} />
+          <T variant="caption" color={colors.bad} style={{ flex: 1 }}>
+            {error}
+          </T>
+        </Row>
+      ) : selected ? (
+        <T variant="caption">{selected.description}</T>
+      ) : null}
 
       {type && (
         <>
-          <SectionTitle>O que pesa na rota</SectionTitle>
-          <Card>
-            <ToggleRow
-              label="Evitar escadas"
-              value={prefs.avoidStairs}
-              onChange={(v) => setPrefs({ ...prefs, avoidStairs: v })}
-            />
-            <ToggleRow
-              label="Priorizar elevador"
-              value={prefs.preferElevator}
-              onChange={(v) => setPrefs({ ...prefs, preferElevator: v })}
-            />
-            <ToggleRow
-              label="Preciso de assento / banco"
-              value={prefs.needSeat}
-              onChange={(v) => setPrefs({ ...prefs, needSeat: v })}
-            />
-            <ToggleRow
-              label="Evitar ladeiras"
-              value={prefs.avoidSteepSlopes}
-              onChange={(v) => setPrefs({ ...prefs, avoidSteepSlopes: v })}
-            />
+          <SectionHeader title="O que pesa na rota" />
+          <Card style={{ padding: 0, gap: 0 }}>
+            <Toggle icon="footsteps-outline" label="Evitar escadas" value={prefs.avoidStairs} onChange={(v) => setPrefs({ ...prefs, avoidStairs: v })} />
+            <Divider inset={66} />
+            <Toggle icon="arrow-up-circle-outline" label="Priorizar elevador" value={prefs.preferElevator} onChange={(v) => setPrefs({ ...prefs, preferElevator: v })} />
+            <Divider inset={66} />
+            <Toggle icon="cafe-outline" label="Preciso de assento" value={prefs.needSeat} onChange={(v) => setPrefs({ ...prefs, needSeat: v })} />
+            <Divider inset={66} />
+            <Toggle icon="trending-up-outline" label="Evitar ladeiras" value={prefs.avoidSteepSlopes} onChange={(v) => setPrefs({ ...prefs, avoidSteepSlopes: v })} />
           </Card>
 
-          <SectionTitle>Caminhada máxima no total</SectionTitle>
-          <View style={styles.chips}>
-            {WALK_LIMITS.map((m) => {
-              const selected = prefs.maxWalkMeters === m;
-              return (
-                <Pressable
-                  key={m}
-                  onPress={() => setPrefs({ ...prefs, maxWalkMeters: m })}
-                  style={[styles.chip, selected && styles.chipSelected]}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected }}
-                >
-                  <Text style={[styles.chipText, selected && { color: '#fff' }]}>
-                    {m >= 1000 ? `${m / 1000} km` : `${m} m`}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <SectionHeader title="Quanto você consegue andar" />
+          <Card>
+            <Row style={{ justifyContent: 'space-between' }}>
+              <T variant="bodyStrong">Caminhada máxima</T>
+              <T variant="h2" color={colors.brand}>
+                {prefs.maxWalkMeters >= 1000 ? `${prefs.maxWalkMeters / 1000} km` : `${prefs.maxWalkMeters} m`}
+              </T>
+            </Row>
+            <View style={styles.walkTrack}>
+              {WALK_LIMITS.map((m) => {
+                const active = prefs.maxWalkMeters === m;
+                const filled = m <= prefs.maxWalkMeters;
+                return (
+                  <Pressable
+                    key={m}
+                    onPress={() => setPrefs({ ...prefs, maxWalkMeters: m })}
+                    style={styles.walkStop}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={`${m} metros`}
+                    hitSlop={6}
+                  >
+                    <View style={[styles.walkBar, filled && { backgroundColor: colors.brand }, active && styles.walkBarActive]} />
+                    <Text style={[styles.walkLabel, active && { color: colors.brandDark, fontFamily: fonts.bold }]}>
+                      {m >= 1000 ? '1k' : m}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <T variant="caption">Somando todos os trechos a pé da viagem, em metros.</T>
+          </Card>
         </>
       )}
-
-      <Button
-        title={firstTime ? 'Salvar e começar' : 'Salvar perfil'}
-        icon="checkmark-circle-outline"
-        onPress={handleSave}
-        loading={saving}
-        style={{ marginTop: spacing.md }}
-      />
     </Screen>
   );
 }
 
-function ToggleRow({
+function Toggle({
+  icon,
   label,
   value,
   onChange,
 }: {
+  icon: IconName;
   label: string;
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
   return (
-    <View style={styles.toggleRow}>
-      <Text style={styles.toggleLabel}>{label}</Text>
+    <Pressable onPress={() => onChange(!value)} style={styles.toggle} accessibilityRole="switch" accessibilityState={{ checked: value }}>
+      <IconBubble icon={icon} size={36} tone={value ? 'brand' : 'neutral'} />
+      <T variant="bodyStrong" style={{ flex: 1 }}>
+        {label}
+      </T>
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ true: colors.primary, false: colors.border }}
-        thumbColor="#fff"
-        accessibilityLabel={label}
+        trackColor={{ true: colors.brand, false: colors.line }}
+        thumbColor={colors.white}
+        {...({ activeThumbColor: colors.white } as object)}
       />
-    </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  intro: { fontSize: 15, color: colors.textMuted, lineHeight: 21 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+    width: '47%',
+    flexGrow: 1,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
     padding: spacing.lg,
+    gap: spacing.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    ...(shadow as object),
   },
-  optionSelected: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  optionLabel: { fontSize: 16, fontWeight: '700', color: colors.text },
-  optionDesc: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  error: { color: colors.danger, fontWeight: '600' },
-  toggleRow: {
-    flexDirection: 'row',
+  optionActive: { borderColor: colors.brand, backgroundColor: '#F4FAF8' },
+  optionLabel: { fontFamily: fonts.bold, fontSize: 14.5, color: colors.ink },
+  check: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.brand,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.xs,
+    justifyContent: 'center',
   },
-  toggleLabel: { fontSize: 15, color: colors.text, flex: 1 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
-  },
-  chipSelected: { backgroundColor: colors.primary },
-  chipText: { fontWeight: '700', color: colors.primary },
+  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, paddingVertical: 14 },
+  walkTrack: { flexDirection: 'row', gap: 6, marginTop: spacing.xs },
+  walkStop: { flex: 1, alignItems: 'center', gap: 6 },
+  walkBar: { height: 10, alignSelf: 'stretch', borderRadius: 5, backgroundColor: colors.surfaceAlt },
+  walkBarActive: { height: 14, marginTop: -2, backgroundColor: colors.brandDark },
+  walkLabel: { fontFamily: fonts.medium, fontSize: 11.5, color: colors.inkFaint },
 });

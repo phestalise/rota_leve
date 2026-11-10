@@ -5,16 +5,15 @@ import React, { useCallback, useState } from 'react';
 import { Linking, StyleSheet, Text, View } from 'react-native';
 import { ModeStrip } from '../components/RouteCard';
 import RouteTimeline from '../components/RouteTimeline';
-import { Button, Card, ScoreBadge, Screen, SectionTitle, Tag } from '../components/ui';
+import { Button, Card, Divider, IconButton, Row, ScoreRing, Screen, SectionHeader, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { scoreRoute } from '../services/accessibility';
 import { getActiveReports } from '../storage/reports';
 import { deleteSavedRoute, findSavedRouteByRouteId, saveRoute } from '../storage/routes';
-import { colors, spacing } from '../theme';
+import { colors, fonts, radius, scoreTone, scoreVerdict, spacing, toneColors } from '../theme';
 import { Report, ScoredRoute } from '../types';
 import { confirmAction, notify } from '../utils/dialog';
-import { transfersLabel } from '../utils/id';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'RouteDetail'>;
 
@@ -43,7 +42,7 @@ export default function RouteDetailScreen({ route: navRoute, navigation }: Props
     const saved = await saveRoute(user!.id, route);
     setSavedId(saved.id);
     setBusy(false);
-    notify('Rota salva', 'Você será avisada(o) em "Minhas rotas" se algum problema surgir neste trajeto.');
+    notify('Rota salva', 'Você será avisado(a) se algum problema surgir neste trajeto.');
   }
 
   async function handleRemove() {
@@ -61,89 +60,121 @@ export default function RouteDetailScreen({ route: navRoute, navigation }: Props
     Linking.openURL(url);
   }
 
+  const tone = toneColors(scoreTone(route.score, route.blocked));
+
   return (
-    <Screen>
-      <Card>
-        <View style={styles.header}>
-          <ScoreBadge score={route.score} size="lg" />
+    <Screen
+      footer={
+        <Row gap={spacing.md}>
+          <IconButton icon="map-outline" label="Abrir no Google Maps" onPress={openMap} size={54} />
+          {savedId ? (
+            <Button title="Remover das salvas" variant="danger" icon="bookmark" onPress={handleRemove} style={{ flex: 1 }} />
+          ) : (
+            <Button title="Salvar rota" icon="bookmark-outline" onPress={handleSave} loading={busy} style={{ flex: 1 }} />
+          )}
+        </Row>
+      }
+    >
+      {/* Resumo */}
+      <Card style={{ padding: 0, gap: 0, overflow: 'hidden' }}>
+        <View style={[styles.hero, { backgroundColor: tone.bg }]}>
+          <ScoreRing score={route.score} blocked={route.blocked} size={92} />
           <View style={{ flex: 1, gap: 4 }}>
-            <Text style={styles.title}>{route.summary}</Text>
-            <Text style={styles.meta}>
+            <Text style={[styles.verdict, { color: tone.fg }]}>{scoreVerdict(route.score, route.blocked)}</Text>
+            <T variant="h2">{route.summary}</T>
+            <T variant="caption" numberOfLines={2}>
               {route.origin} → {route.destination}
-            </Text>
-            <Text style={styles.meta}>
-              {route.durationMin} min · {route.walkMeters} m a pé · {transfersLabel(route.transfers)}
-            </Text>
+            </T>
           </View>
         </View>
-        <ModeStrip route={route} />
-        {route.blocked && <Tag text="Inviável para o seu perfil" tone="danger" icon="close-circle" />}
-      </Card>
-
-      <Card style={styles.explain}>
-        <View style={styles.explainHeader}>
-          <Ionicons name="sparkles" size={18} color={colors.primaryDark} />
-          <Text style={styles.explainTitle}>Resumo da rota</Text>
+        <Row style={styles.stats}>
+          <Stat icon="time-outline" value={`${route.durationMin}`} unit="min" />
+          <View style={styles.statDivider} />
+          <Stat icon="walk-outline" value={`${route.walkMeters}`} unit="m a pé" />
+          <View style={styles.statDivider} />
+          <Stat icon="git-compare-outline" value={`${route.transfers}`} unit={route.transfers === 1 ? 'baldeação' : 'baldeações'} />
+        </Row>
+        <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
+          <ModeStrip route={route} />
         </View>
-        <Text style={styles.explainText}>{route.explanation}</Text>
       </Card>
 
-      {route.issues.length > 0 && (
-        <>
-          <SectionTitle>Pontos de atenção</SectionTitle>
-          <Card>
-            {route.issues.map((i) => (
-              <View key={i} style={styles.line}>
-                <Ionicons name="alert-circle" size={18} color={colors.danger} />
-                <Text style={styles.issue}>{i}</Text>
+      {/* Explicação */}
+      <View style={styles.ai}>
+        <Row gap={8}>
+          <View style={styles.aiIcon}>
+            <Ionicons name="sparkles" size={14} color={colors.white} />
+          </View>
+          <T variant="label" color={colors.brandDark}>
+            Resumo para você
+          </T>
+        </Row>
+        <T variant="body" color={colors.ink} style={{ fontSize: 15.5, lineHeight: 24 }}>
+          {route.explanation}
+        </T>
+      </View>
+
+      {/* Atenção e a favor */}
+      {(route.issues.length > 0 || route.highlights.length > 0) && (
+        <Card style={{ gap: spacing.sm }}>
+          {route.issues.map((i) => (
+            <Row key={i} gap={10} align="flex-start">
+              <View style={[styles.bullet, { backgroundColor: colors.badSoft }]}>
+                <Ionicons name="alert" size={12} color={colors.bad} />
               </View>
-            ))}
-          </Card>
-        </>
+              <T variant="body" color={colors.ink} style={{ flex: 1, fontSize: 14 }}>
+                {i}
+              </T>
+            </Row>
+          ))}
+          {route.issues.length > 0 && route.highlights.length > 0 && <Divider />}
+          {route.highlights.map((h) => (
+            <Row key={h} gap={10} align="flex-start">
+              <View style={[styles.bullet, { backgroundColor: colors.goodSoft }]}>
+                <Ionicons name="checkmark" size={12} color={colors.good} />
+              </View>
+              <T variant="body" color={colors.ink} style={{ flex: 1, fontSize: 14 }}>
+                {h}
+              </T>
+            </Row>
+          ))}
+        </Card>
       )}
 
-      {route.highlights.length > 0 && (
-        <>
-          <SectionTitle>A favor</SectionTitle>
-          <Card>
-            {route.highlights.map((h) => (
-              <View key={h} style={styles.line}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-                <Text style={styles.highlight}>{h}</Text>
-              </View>
-            ))}
-          </Card>
-        </>
-      )}
-
-      <SectionTitle>Mapa do trajeto</SectionTitle>
+      <SectionHeader title="Trajeto passo a passo" action="Abrir mapa" onAction={openMap} />
       <Card>
-        <RouteTimeline
-          steps={route.steps}
-          reports={reports}
-          onReport={(location) => navigation.navigate('NewReport', { location })}
-        />
-        <Button title="Abrir no Google Maps" variant="secondary" icon="map-outline" onPress={openMap} />
+        <RouteTimeline steps={route.steps} reports={reports} onReport={(location) => navigation.navigate('NewReport', { location })} />
       </Card>
-
-      {savedId ? (
-        <Button title="Remover das minhas rotas" variant="danger" icon="trash-outline" onPress={handleRemove} />
-      ) : (
-        <Button title="Salvar rota" icon="bookmark-outline" onPress={handleSave} loading={busy} />
-      )}
     </Screen>
   );
 }
 
+function Stat({ icon, value, unit }: { icon: keyof typeof Ionicons.glyphMap; value: string; unit: string }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
+      <Ionicons name={icon} size={16} color={colors.inkFaint} />
+      <Text style={styles.statValue}>{value}</Text>
+      <T variant="caption" style={{ fontSize: 11.5 }}>
+        {unit}
+      </T>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', gap: spacing.lg, alignItems: 'center' },
-  title: { fontSize: 18, fontWeight: '800', color: colors.text },
-  meta: { color: colors.textMuted, fontSize: 13 },
-  explain: { backgroundColor: colors.primaryLight, borderColor: colors.primaryLight },
-  explainHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  explainTitle: { fontWeight: '800', color: colors.primaryDark },
-  explainText: { color: colors.text, fontSize: 15, lineHeight: 22 },
-  line: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
-  issue: { flex: 1, color: colors.text },
-  highlight: { flex: 1, color: colors.text },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, padding: spacing.lg },
+  verdict: { fontFamily: fonts.bold, fontSize: 11.5, letterSpacing: 0.6, textTransform: 'uppercase' },
+  stats: { paddingVertical: spacing.lg },
+  statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.line },
+  statValue: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.ink, letterSpacing: -0.3 },
+  ai: {
+    backgroundColor: colors.brandSoft,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.sm,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.brand,
+  },
+  aiIcon: { width: 24, height: 24, borderRadius: 8, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
+  bullet: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
 });

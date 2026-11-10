@@ -2,29 +2,34 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Card, EmptyState, Loading, Tag } from '../components/ui';
+import { FlatList, Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { EmptyState, Loading, Pill, Row, Segmented, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { CATEGORY_ICONS, CATEGORY_LABELS, getReports } from '../storage/reports';
-import { colors, radius, spacing } from '../theme';
-import { Report } from '../types';
+import { colors, fonts, radius, shadow, shadowStrong, spacing, Tone, toneColors } from '../theme';
+import { Report, ReportCategory } from '../types';
 import { normalize, timeUntil } from '../utils/id';
 
 type Filter = 'ativos' | 'meus' | 'todos';
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'ativos', label: 'Ativos' },
-  { key: 'meus', label: 'Meus relatos' },
-  { key: 'todos', label: 'Todos' },
-];
+export const CATEGORY_TONES: Record<ReportCategory, Tone> = {
+  elevador: 'bad',
+  escada_rolante: 'warn',
+  calcada: 'accent',
+  rampa: 'warn',
+  cobertura: 'brand',
+  outro: 'neutral',
+};
 
-export function statusTag(r: Report) {
-  if (r.status === 'resolvido') return <Tag text="Resolvido" tone="success" icon="checkmark-done" />;
-  if (r.status === 'expirado') return <Tag text="Expirado" tone="warning" icon="time-outline" />;
-  return <Tag text={timeUntil(r.expiresAt)} tone="danger" icon="time-outline" />;
+export function statusPill(r: Report) {
+  if (r.status === 'resolvido') return <Pill text="Resolvido" tone="good" icon="checkmark-done" />;
+  if (r.status === 'expirado') return <Pill text="Expirado" tone="neutral" icon="time-outline" />;
+  return <Pill text={timeUntil(r.expiresAt)} tone="warn" icon="time-outline" />;
 }
+
+/** Mantido por compatibilidade. */
+export const statusTag = statusPill;
 
 export default function ReportsListScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
@@ -43,140 +48,132 @@ export default function ReportsListScreen() {
     if (!reports) return [];
     const q = normalize(query);
     return reports
-      .filter((r) =>
-        filter === 'ativos' ? r.status === 'ativo' : filter === 'meus' ? r.userId === user?.id : true,
-      )
+      .filter((r) => (filter === 'ativos' ? r.status === 'ativo' : filter === 'meus' ? r.userId === user?.id : true))
       .filter((r) => !q || normalize(`${r.location} ${r.description}`).includes(q));
   }, [reports, filter, query, user]);
 
   if (!reports) return <Loading />;
 
+  const activeCount = reports.filter((r) => r.status === 'ativo').length;
+
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right']}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <FlatList
         data={visible}
         keyExtractor={(r) => r.id}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <View style={{ gap: spacing.md }}>
-            <Button
-              title="Novo relato"
-              icon="add-circle-outline"
-              onPress={() => navigation.navigate('NewReport')}
-            />
-            <View style={styles.search}>
-              <Ionicons name="search" size={18} color={colors.textMuted} />
-              <SearchInput value={query} onChange={setQuery} />
-            </View>
-            <View style={styles.filters}>
-              {FILTERS.map((f) => (
-                <Pressable
-                  key={f.key}
-                  onPress={() => setFilter(f.key)}
-                  style={[styles.filter, filter === f.key && styles.filterActive]}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: filter === f.key }}
-                >
-                  <Text style={[styles.filterText, filter === f.key && { color: '#fff' }]}>{f.label}</Text>
+          <View style={{ gap: spacing.md, marginBottom: spacing.xs }}>
+            <T variant="body" style={{ marginTop: -spacing.sm }}>
+              {activeCount} problema{activeCount === 1 ? '' : 's'} ativo{activeCount === 1 ? '' : 's'} relatado
+              {activeCount === 1 ? '' : 's'} pela comunidade.
+            </T>
+            <Row gap={spacing.sm} style={[styles.search, shadow]}>
+              <Ionicons name="search" size={18} color={colors.inkFaint} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Buscar estação ou rua"
+                placeholderTextColor={colors.inkFaint}
+                style={[styles.searchInput, Platform.OS === 'web' && ({ outlineStyle: 'none' } as object)]}
+                accessibilityLabel="Buscar relatos"
+              />
+              {query ? (
+                <Pressable onPress={() => setQuery('')} hitSlop={8}>
+                  <Ionicons name="close-circle" size={18} color={colors.inkFaint} />
                 </Pressable>
-              ))}
-            </View>
+              ) : null}
+            </Row>
+            <Segmented
+              options={[
+                { key: 'ativos', label: 'Ativos' },
+                { key: 'meus', label: 'Meus' },
+                { key: 'todos', label: 'Todos' },
+              ]}
+              value={filter}
+              onChange={setFilter}
+            />
           </View>
         }
         ListEmptyComponent={
           <EmptyState
             icon="megaphone-outline"
-            title="Nenhum relato por aqui"
-            message="Viu um elevador quebrado ou uma calçada ruim? Avise a comunidade."
+            title={filter === 'meus' ? 'Você ainda não relatou' : 'Nada por aqui'}
+            message="Viu um elevador quebrado ou uma calçada ruim? Toque no + e avise a comunidade."
           />
         }
-        renderItem={({ item }) => (
-          <Card onPress={() => navigation.navigate('ReportDetail', { reportId: item.id })}>
-            <View style={styles.row}>
+        renderItem={({ item }) => {
+          const tone = CATEGORY_TONES[item.category];
+          const faded = item.status !== 'ativo';
+          return (
+            <Pressable
+              onPress={() => navigation.navigate('ReportDetail', { reportId: item.id })}
+              style={({ pressed }) => [styles.card, shadow, faded && { opacity: 0.7 }, pressed && { opacity: 0.9 }]}
+            >
               {item.photoUri ? (
                 <Image source={{ uri: item.photoUri }} style={styles.thumb} />
               ) : (
-                <View style={[styles.thumb, styles.thumbEmpty]}>
-                  <Ionicons
-                    name={CATEGORY_ICONS[item.category] as keyof typeof Ionicons.glyphMap}
-                    size={26}
-                    color={colors.primary}
-                  />
+                <View style={[styles.thumb, styles.thumbEmpty, { backgroundColor: toneColors(tone).bg }]}>
+                  <Ionicons name={CATEGORY_ICONS[item.category] as keyof typeof Ionicons.glyphMap} size={30} color={toneColors(tone).fg} />
                 </View>
               )}
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text style={styles.category}>{CATEGORY_LABELS[item.category]}</Text>
-                <Text style={styles.location} numberOfLines={1}>
-                  <Ionicons name="location-outline" size={13} /> {item.location}
-                </Text>
-                <Text style={styles.desc} numberOfLines={2}>
+              <View style={{ flex: 1, gap: 3 }}>
+                <T variant="overline" style={{ fontSize: 10.5 }}>
+                  {CATEGORY_LABELS[item.category]}
+                </T>
+                <T variant="title" numberOfLines={1} style={{ fontSize: 15 }}>
+                  {item.location}
+                </T>
+                <T variant="caption" numberOfLines={2}>
                   {item.description}
-                </Text>
+                </T>
+                <Row style={{ justifyContent: 'space-between', marginTop: 6 }}>
+                  {statusPill(item)}
+                  <Row gap={4}>
+                    <Ionicons name="people" size={13} color={colors.inkFaint} />
+                    <Text style={styles.count}>{item.confirmations.length}</Text>
+                  </Row>
+                </Row>
               </View>
-            </View>
-            <View style={styles.footer}>
-              {statusTag(item)}
-              <Text style={styles.confirm}>
-                <Ionicons name="people-outline" size={13} /> {item.confirmations.length} confirmação
-                {item.confirmations.length === 1 ? '' : 'ões'}
-              </Text>
-            </View>
-          </Card>
-        )}
+            </Pressable>
+          );
+        }}
       />
-    </SafeAreaView>
-  );
-}
 
-function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <TextInput
-      value={value}
-      onChangeText={onChange}
-      placeholder="Buscar por estação, rua…"
-      placeholderTextColor={colors.textMuted}
-      style={styles.searchInput}
-      accessibilityLabel="Buscar relatos"
-    />
+      <Pressable
+        onPress={() => navigation.navigate('NewReport')}
+        style={({ pressed }) => [styles.fab, shadowStrong, pressed && { transform: [{ scale: 0.95 }] }]}
+        accessibilityRole="button"
+        accessibilityLabel="Novo relato"
+      >
+        <Ionicons name="add" size={24} color={colors.white} />
+        <Text style={styles.fabText}>Relatar</Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  list: {
-    padding: spacing.lg,
-    gap: spacing.md,
-    width: '100%',
-    maxWidth: 640,
-    alignSelf: 'center',
-  },
-  search: {
+  list: { padding: spacing.xl, paddingTop: spacing.sm, gap: spacing.md, paddingBottom: 110, width: '100%', maxWidth: 680, alignSelf: 'center' },
+  search: { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.md },
+  searchInput: { flex: 1, paddingVertical: 13, fontSize: 15, fontFamily: fonts.medium, color: colors.ink },
+  card: { flexDirection: 'row', gap: spacing.md, backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.md },
+  thumb: { width: 76, alignSelf: 'stretch', minHeight: 90, borderRadius: radius.md, backgroundColor: colors.surfaceAlt },
+  thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
+  count: { fontFamily: fonts.bold, fontSize: 12.5, color: colors.inkSoft },
+  fab: {
+    position: 'absolute',
+    right: spacing.xl,
+    bottom: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
+    gap: 6,
+    backgroundColor: colors.brand,
+    paddingLeft: 16,
+    paddingRight: 20,
+    height: 54,
+    borderRadius: 27,
   },
-  searchInput: { flex: 1, paddingVertical: spacing.md, fontSize: 15, color: colors.text },
-  filters: { flexDirection: 'row', gap: spacing.sm },
-  filter: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-  filterActive: { backgroundColor: colors.primary },
-  filterText: { color: colors.primary, fontWeight: '700' },
-  row: { flexDirection: 'row', gap: spacing.md },
-  thumb: { width: 64, height: 64, borderRadius: radius.sm, backgroundColor: colors.primaryLight },
-  thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
-  category: { fontWeight: '800', color: colors.text, fontSize: 15 },
-  location: { color: colors.primaryDark, fontSize: 13, fontWeight: '600' },
-  desc: { color: colors.textMuted, fontSize: 13 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  confirm: { color: colors.textMuted, fontSize: 13 },
+  fabText: { fontFamily: fonts.bold, fontSize: 15, color: colors.white },
 });
