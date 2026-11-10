@@ -31,8 +31,10 @@ export interface RouteStep {
   distanceMeters: number;
   durationMin: number;
   slope?: Slope;
-  /** Estação onde o passageiro embarca/desembarca (metrô/trem) */
-  station?: string;
+  /** Estações por onde o passageiro entra/sai (metrô/trem) */
+  stations?: string[];
+  /** Ponto de ônibus de embarque */
+  stop?: string;
 }
 
 export interface RouteOption {

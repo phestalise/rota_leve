@@ -3,13 +3,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import { Text } from 'react-native';
-import { Loading, Screen } from '../components/ui';
+import { Loading } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import MobilityProfileScreen from '../screens/MobilityProfileScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import RouteResultsScreen from '../screens/RouteResultsScreen';
+import SearchRouteScreen from '../screens/SearchRouteScreen';
 import { colors } from '../theme';
 import { AppStackParamList, AuthStackParamList, TabParamList } from './types';
 
@@ -31,14 +32,6 @@ const TAB_ICONS: Record<keyof TabParamList, keyof typeof Ionicons.glyphMap> = {
   Perfil: 'person',
 };
 
-function SearchPlaceholder() {
-  return (
-    <Screen>
-      <Text>Busca de rotas em construção.</Text>
-    </Screen>
-  );
-}
-
 function Tabs() {
   return (
     <Tab.Navigator
@@ -56,7 +49,7 @@ function Tabs() {
         },
       })}
     >
-      <Tab.Screen name="Buscar" component={SearchPlaceholder} options={{ title: 'Buscar rota' }} />
+      <Tab.Screen name="Buscar" component={SearchRouteScreen} options={{ title: 'Buscar rota' }} />
       <Tab.Screen name="Perfil" component={ProfileScreen} options={{ title: 'Perfil' }} />
     </Tab.Navigator>
   );
@@ -90,6 +83,11 @@ export default function AppNavigator() {
             name="ProfileSetup"
             component={MobilityProfileScreen}
             options={{ title: 'Perfil de mobilidade' }}
+          />
+          <AppStack.Screen
+            name="RouteResults"
+            component={RouteResultsScreen}
+            options={{ title: 'Rotas encontradas' }}
           />
         </AppStack.Navigator>
       )}
