@@ -6,9 +6,11 @@ import React from 'react';
 import { Loading } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
+import MyRoutesScreen from '../screens/MyRoutesScreen';
 import MobilityProfileScreen from '../screens/MobilityProfileScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import RouteDetailScreen from '../screens/RouteDetailScreen';
 import RouteResultsScreen from '../screens/RouteResultsScreen';
 import SearchRouteScreen from '../screens/SearchRouteScreen';
 import { colors } from '../theme';
@@ -50,6 +52,7 @@ function Tabs() {
       })}
     >
       <Tab.Screen name="Buscar" component={SearchRouteScreen} options={{ title: 'Buscar rota' }} />
+      <Tab.Screen name="MinhasRotas" component={MyRoutesScreen} options={{ title: 'Minhas rotas' }} />
       <Tab.Screen name="Perfil" component={ProfileScreen} options={{ title: 'Perfil' }} />
     </Tab.Navigator>
   );
@@ -88,6 +91,11 @@ export default function AppNavigator() {
             name="RouteResults"
             component={RouteResultsScreen}
             options={{ title: 'Rotas encontradas' }}
+          />
+          <AppStack.Screen
+            name="RouteDetail"
+            component={RouteDetailScreen}
+            options={{ title: 'Detalhe da rota' }}
           />
         </AppStack.Navigator>
       )}
