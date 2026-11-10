@@ -19,10 +19,15 @@ export function timeUntil(iso: string) {
   return `expira em ${hours}h ${minutes}min`;
 }
 
+export function transfersLabel(n: number) {
+  if (n === 0) return 'sem baldeação';
+  return n === 1 ? '1 baldeação' : `${n} baldeações`;
+}
+
 export function normalize(text: string) {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .trim();
 }

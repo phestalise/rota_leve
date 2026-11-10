@@ -1,5 +1,5 @@
 import { MobilityProfile, Report, RouteOption, RouteStep, ScoredRoute } from '../types';
-import { normalize } from '../utils/id';
+import { normalize, transfersLabel } from '../utils/id';
 import { BUS_STOPS, STATIONS } from './stations';
 
 /**
@@ -174,7 +174,7 @@ function explain(
     `Esta rota tem ${route.walkMeters} m de caminhada ${slopes ? 'com trecho de ladeira' : 'plana'}`,
   );
   if (elevators.length > 0) parts.push(`elevador funcionando em ${elevators.join(' e ')}`);
-  if (route.transfers > 0) parts.push(`${route.transfers} baldeação${route.transfers > 1 ? 'ões' : ''}`);
+  if (route.transfers > 0) parts.push(transfersLabel(route.transfers));
   let text = parts.join(', ') + '.';
   text += endHasSeat ? ' O ponto final tem banco.' : ' O ponto final não tem banco.';
   if (blocked) text += ' Atenção: há trecho sem acesso por elevador, inviável para cadeira de rodas.';

@@ -79,7 +79,7 @@ export async function fetchCandidateRoutes(origin: string, destination: string):
   ]);
 
   const bus = finalize(`r_${key}_bus`, origin, destination, `Ônibus direto 875A`, [
-    step({ mode: 'walk', from: origin, to: 'Ponto Av. Paulista, 1000', street: 'Av. Paulista', distanceMeters: 200, durationMin: 3, slope: 'plana' }),
+    step({ mode: 'walk', from: origin, to: 'Ponto Av. Paulista, 1000', street: 'Calçada de acesso ao ponto', distanceMeters: 200, durationMin: 3, slope: 'plana' }),
     step({ mode: 'bus', from: 'Ponto Av. Paulista, 1000', to: 'Ponto Rua Vergueiro, 1200', line: '875A-10', stop: 'Ponto Av. Paulista, 1000', distanceMeters: 9000, durationMin: jitter(32) }),
     step({ mode: 'walk', from: 'Ponto Rua Vergueiro, 1200', to: destination, street: 'Rua Vergueiro', distanceMeters: 150, durationMin: 2, slope: 'plana' }),
   ]);

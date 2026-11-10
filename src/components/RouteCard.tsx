@@ -3,6 +3,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../theme';
 import { ScoredRoute, StepMode } from '../types';
+import { transfersLabel } from '../utils/id';
 import { Card, ScoreBadge, Tag } from './ui';
 
 export const MODE_ICONS: Record<StepMode, keyof typeof Ionicons.glyphMap> = {
@@ -43,8 +44,7 @@ export default function RouteCard({
           {rank === 1 && !route.blocked && <Tag text="Melhor para você" tone="success" icon="star" />}
           <Text style={styles.title}>{route.summary}</Text>
           <Text style={styles.meta}>
-            {route.durationMin} min · {route.walkMeters} m a pé · {route.transfers} baldeação
-            {route.transfers === 1 ? '' : 'ões'}
+            {route.durationMin} min · {route.walkMeters} m a pé · {transfersLabel(route.transfers)}
           </Text>
         </View>
       </View>

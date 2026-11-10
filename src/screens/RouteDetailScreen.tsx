@@ -14,6 +14,7 @@ import { deleteSavedRoute, findSavedRouteByRouteId, saveRoute } from '../storage
 import { colors, spacing } from '../theme';
 import { Report, ScoredRoute } from '../types';
 import { confirmAction, notify } from '../utils/dialog';
+import { transfersLabel } from '../utils/id';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'RouteDetail'>;
 
@@ -71,8 +72,7 @@ export default function RouteDetailScreen({ route: navRoute, navigation }: Props
               {route.origin} → {route.destination}
             </Text>
             <Text style={styles.meta}>
-              {route.durationMin} min · {route.walkMeters} m a pé · {route.transfers} baldeação
-              {route.transfers === 1 ? '' : 'ões'}
+              {route.durationMin} min · {route.walkMeters} m a pé · {transfersLabel(route.transfers)}
             </Text>
           </View>
         </View>

@@ -14,6 +14,8 @@ const MODE_COLORS: Record<StepMode, string> = {
   train: '#7B3FA0',
 };
 
+const SLOPE_LABEL = { plana: 'plano', moderada: 'com leve subida', ingreme: 'íngreme' } as const;
+
 const MODE_LABEL: Record<StepMode, string> = {
   walk: 'A pé',
   bus: 'Ônibus',
@@ -64,7 +66,7 @@ export default function RouteTimeline({
               </View>
               <Text style={styles.detail}>
                 {s.mode === 'walk'
-                  ? `${s.distanceMeters} m pela ${s.street} · terreno ${s.slope ?? 'plano'} · ${s.durationMin} min`
+                  ? `${s.distanceMeters} m pela ${s.street} · terreno ${SLOPE_LABEL[s.slope ?? 'plana']} · ${s.durationMin} min`
                   : `Até ${s.to} · ${s.durationMin} min`}
               </Text>
               {(s.stations ?? []).map((st) => {
