@@ -11,7 +11,7 @@ import { AppStackParamList } from '../navigation/types';
 import { scoreRoute } from '../services/accessibility';
 import { getActiveReports } from '../storage/reports';
 import { deleteSavedRoute, findSavedRouteByRouteId, saveRoute } from '../storage/routes';
-import { colors, fonts, radius, scoreTone, scoreVerdict, spacing, toneColors } from '../theme';
+import { colors, fonts, radius, scoreTone, scoreVerdict, spacing, themed, toneColors } from '../theme';
 import { Report, ScoredRoute } from '../types';
 import { confirmAction, notify } from '../utils/dialog';
 
@@ -161,7 +161,7 @@ function Stat({ icon, value, unit }: { icon: keyof typeof Ionicons.glyphMap; val
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   hero: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, padding: spacing.lg },
   verdict: { fontFamily: fonts.bold, fontSize: 11.5, letterSpacing: 0.6, textTransform: 'uppercase' },
   stats: { paddingVertical: spacing.lg },
@@ -177,4 +177,4 @@ const styles = StyleSheet.create({
   },
   aiIcon: { width: 24, height: 24, borderRadius: 8, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
   bullet: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-});
+}));

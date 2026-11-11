@@ -3,19 +3,21 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Card, Divider, IconBubble, ListRow, Pill, Row, SectionHeader, T } from '../components/ui';
+import { Card, Container, Divider, IconBubble, ListRow, Pill, Row, SectionHeader, Segmented, T } from '../components/ui';
+import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { profileIcon, profileLabel } from '../services/profiles';
 import { getReports } from '../storage/reports';
 import { getSavedRoutes } from '../storage/routes';
-import { colors, fonts, radius, shadow, spacing } from '../theme';
+import { colors, fonts, radius, spacing, themed } from '../theme';
 import { confirmAction } from '../utils/dialog';
 
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
+  const { mode, setMode } = useTheme();
   const profile = user?.profile;
   const [stats, setStats] = useState({ routes: 0, reports: 0, confirmations: 0 });
 
@@ -33,7 +35,7 @@ export default function ProfileScreen() {
   );
 
   async function handleLogout() {
-    if (await confirmAction('Sair', 'Deseja sair da sua conta?')) await signOut();
+    if (await confirmAction('Sair da conta', 'Você vai precisar entrar de novo para ver suas rotas.', 'Sair')) await signOut();
   }
 
   const initials = (user?.name ?? '?')
@@ -49,21 +51,18 @@ export default function ProfileScreen() {
       contentContainerStyle={{ paddingBottom: spacing.xxxl }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.hero, { paddingTop: insets.top + spacing.xxl }]}>
-        <View style={[styles.circle, { width: 200, height: 200, top: -70, left: -60 }]} />
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </View>
-        <T variant="h1" color={colors.white} center>
-          {user?.name}
-        </T>
-        <T variant="caption" color="rgba(255,255,255,0.75)" center>
-          {user?.email}
-        </T>
-      </View>
+      <Container style={{ paddingTop: insets.top + spacing.xxl, gap: spacing.lg }}>
+        <Row gap={spacing.lg}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <T variant="h1">{user?.name}</T>
+            <T variant="caption">{user?.email}</T>
+          </View>
+        </Row>
 
-      <View style={styles.body}>
-        <Row style={[styles.stats, shadow]}>
+        <Row style={styles.stats}>
           <Stat value={stats.routes} label="Rotas salvas" />
           <View style={styles.statDivider} />
           <Stat value={stats.reports} label="Relatos" />
@@ -94,6 +93,16 @@ export default function ProfileScreen() {
           )}
         </Card>
 
+        <SectionHeader title="Aparência" />
+        <Segmented
+          options={[
+            { key: 'light', label: 'Vermelho + branco' },
+            { key: 'dark', label: 'Vermelho + preto' },
+          ]}
+          value={mode}
+          onChange={setMode}
+        />
+
         <SectionHeader title="Aplicativo" />
         <Card style={{ padding: 0, gap: 0, overflow: 'hidden' }}>
           <ListRow
@@ -107,7 +116,7 @@ export default function ProfileScreen() {
           <Divider inset={70} />
           <ListRow icon="log-out-outline" title="Sair" danger onPress={handleLogout} />
         </Card>
-      </View>
+      </Container>
     </ScrollView>
   );
 }
@@ -123,30 +132,23 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  hero: {
+const styles = themed(() => StyleSheet.create({
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.brand,
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingBottom: 64,
-    gap: 4,
-    overflow: 'hidden',
-  },
-  circle: { position: 'absolute', borderRadius: 999, backgroundColor: colors.white, opacity: 0.08 },
-  avatar: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: 'rgba(255,255,255,0.35)',
-    marginBottom: spacing.sm,
   },
-  avatarText: { fontFamily: fonts.extrabold, fontSize: 30, color: colors.white },
-  body: { paddingHorizontal: spacing.xl, marginTop: -40, gap: spacing.lg },
-  stats: { backgroundColor: colors.surface, borderRadius: radius.lg, paddingVertical: spacing.lg },
+  avatarText: { fontFamily: fonts.extrabold, fontSize: 24, color: colors.white },
+  stats: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingVertical: spacing.lg,
+  },
   statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.line },
   statValue: { fontFamily: fonts.extrabold, fontSize: 22, color: colors.ink },
-});
+}));

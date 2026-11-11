@@ -4,14 +4,15 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ModeStrip, RouteStats } from '../components/RouteCard';
-import { Button, EmptyState, Loading, Row, ScoreRing, Screen, T } from '../components/ui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, EmptyState, Loading, PageHeader, Row, ScoreRing, Screen, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { scoreRoute } from '../services/accessibility';
 import { alertMessage, getRouteAlerts, RouteAlert } from '../services/alerts';
 import { getActiveReports } from '../storage/reports';
 import { getSavedRoutes } from '../storage/routes';
-import { colors, fonts, radius, shadow, spacing } from '../theme';
+import { colors, elev, fonts, radius, spacing, themed } from '../theme';
 import { SavedRoute, ScoredRoute } from '../types';
 
 interface Item {
@@ -23,6 +24,7 @@ interface Item {
 export default function MyRoutesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [items, setItems] = useState<Item[] | null>(null);
 
   useFocusEffect(
@@ -48,7 +50,8 @@ export default function MyRoutesScreen() {
 
   if (items.length === 0) {
     return (
-      <Screen>
+      <Screen style={{ paddingTop: insets.top + spacing.xxl }}>
+        <PageHeader title="Rotas salvas" />
         <EmptyState
           icon="bookmark-outline"
           title="Nenhuma rota salva"
@@ -62,18 +65,21 @@ export default function MyRoutesScreen() {
   const withAlert = items.filter((i) => i.alert).length;
 
   return (
-    <Screen style={{ paddingTop: spacing.sm }}>
-      <T variant="body" style={{ marginTop: -spacing.sm }}>
-        {withAlert > 0
-          ? `${withAlert} de ${items.length} rota${items.length > 1 ? 's' : ''} com aviso da comunidade.`
-          : 'Tudo certo nos seus trajetos por enquanto.'}
-      </T>
+    <Screen style={{ paddingTop: insets.top + spacing.xxl }}>
+      <PageHeader
+        title="Rotas salvas"
+        subtitle={
+          withAlert > 0
+            ? `${withAlert} de ${items.length} rota${items.length > 1 ? 's' : ''} com aviso da comunidade.`
+            : 'Tudo certo nos seus trajetos por enquanto.'
+        }
+      />
 
       {items.map(({ saved, current, alert }) => (
         <Pressable
           key={saved.id}
           onPress={() => navigation.navigate('RouteDetail', { route: current, savedId: saved.id })}
-          style={({ pressed }) => [styles.card, shadow, pressed && { opacity: 0.94 }]}
+          style={({ pressed }) => [styles.card, elev.shadow, pressed && { opacity: 0.94 }]}
         >
           <View style={styles.inner}>
             <Row gap={spacing.lg} align="flex-start">
@@ -117,7 +123,7 @@ export default function MyRoutesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden' },
   inner: { padding: spacing.lg, gap: spacing.md },
   alert: { backgroundColor: colors.badSoft, padding: spacing.lg, gap: spacing.sm },
@@ -133,4 +139,4 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   altText: { fontFamily: fonts.bold, fontSize: 13, color: colors.white },
-});
+}));

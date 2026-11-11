@@ -3,11 +3,12 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { EmptyState, Loading, Pill, Row, Segmented, T } from '../components/ui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { EmptyState, Loading, PageHeader, Pill, Row, Segmented, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { CATEGORY_ICONS, CATEGORY_LABELS, getReports } from '../storage/reports';
-import { colors, fonts, radius, shadow, shadowStrong, spacing, Tone, toneColors } from '../theme';
+import { colors, elev, fonts, radius, spacing, themed, Tone, toneColors } from '../theme';
 import { Report, ReportCategory } from '../types';
 import { normalize, timeUntil } from '../utils/id';
 
@@ -34,6 +35,7 @@ export const statusTag = statusPill;
 export default function ReportsListScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [reports, setReports] = useState<Report[] | null>(null);
   const [filter, setFilter] = useState<Filter>('ativos');
   const [query, setQuery] = useState('');
@@ -64,12 +66,12 @@ export default function ReportsListScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <View style={{ gap: spacing.md, marginBottom: spacing.xs }}>
-            <T variant="body" style={{ marginTop: -spacing.sm }}>
-              {activeCount} problema{activeCount === 1 ? '' : 's'} ativo{activeCount === 1 ? '' : 's'} relatado
-              {activeCount === 1 ? '' : 's'} pela comunidade.
-            </T>
-            <Row gap={spacing.sm} style={[styles.search, shadow]}>
+          <View style={{ gap: spacing.md, marginBottom: spacing.xs, paddingTop: insets.top }}>
+            <PageHeader
+              title="Relatos"
+              subtitle={`${activeCount} problema${activeCount === 1 ? '' : 's'} ativo${activeCount === 1 ? '' : 's'} relatado${activeCount === 1 ? '' : 's'} pela comunidade.`}
+            />
+            <Row gap={spacing.sm} style={styles.search}>
               <Ionicons name="search" size={18} color={colors.inkFaint} />
               <TextInput
                 value={query}
@@ -109,7 +111,7 @@ export default function ReportsListScreen() {
           return (
             <Pressable
               onPress={() => navigation.navigate('ReportDetail', { reportId: item.id })}
-              style={({ pressed }) => [styles.card, shadow, faded && { opacity: 0.7 }, pressed && { opacity: 0.9 }]}
+              style={({ pressed }) => [styles.card, faded && { opacity: 0.7 }, pressed && { opacity: 0.9 }]}
             >
               {item.photoUri ? (
                 <Image source={{ uri: item.photoUri }} style={styles.thumb} />
@@ -143,7 +145,7 @@ export default function ReportsListScreen() {
 
       <Pressable
         onPress={() => navigation.navigate('NewReport')}
-        style={({ pressed }) => [styles.fab, shadowStrong, pressed && { transform: [{ scale: 0.95 }] }]}
+        style={({ pressed }) => [styles.fab, elev.shadowStrong, { borderWidth: 0 }, pressed && { transform: [{ scale: 0.95 }] }]}
         accessibilityRole="button"
         accessibilityLabel="Novo relato"
       >
@@ -154,11 +156,11 @@ export default function ReportsListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  list: { padding: spacing.xl, paddingTop: spacing.sm, gap: spacing.md, paddingBottom: 110, width: '100%', maxWidth: 680, alignSelf: 'center' },
-  search: { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.md },
+const styles = themed(() => StyleSheet.create({
+  list: { padding: spacing.xl, paddingTop: spacing.xxl, gap: spacing.md, paddingBottom: 110, width: '100%', maxWidth: 680, alignSelf: 'center' },
+  search: { backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, paddingHorizontal: spacing.md },
   searchInput: { flex: 1, paddingVertical: 13, fontSize: 15, fontFamily: fonts.medium, color: colors.ink },
-  card: { flexDirection: 'row', gap: spacing.md, backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.md },
+  card: { flexDirection: 'row', gap: spacing.md, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: spacing.md },
   thumb: { width: 76, alignSelf: 'stretch', minHeight: 90, borderRadius: radius.md, backgroundColor: colors.surfaceAlt },
   thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
   count: { fontFamily: fonts.bold, fontSize: 12.5, color: colors.inkSoft },
@@ -176,4 +178,4 @@ const styles = StyleSheet.create({
     borderRadius: 27,
   },
   fabText: { fontFamily: fonts.bold, fontSize: 15, color: colors.white },
-});
+}));

@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { DarkTheme, DefaultTheme, NavigationContainer, NavigationState } from '@react-navigation/native';
 import { createNativeStackNavigator, NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Loading } from '../components/ui';
+import Logo from '../components/Logo';
+import { Loading, ThemeToggle } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import AboutScreen from '../screens/AboutScreen';
 import LoginScreen from '../screens/LoginScreen';
@@ -19,19 +20,31 @@ import ReportsListScreen from '../screens/ReportsListScreen';
 import RouteDetailScreen from '../screens/RouteDetailScreen';
 import RouteResultsScreen from '../screens/RouteResultsScreen';
 import SearchRouteScreen from '../screens/SearchRouteScreen';
-import { colors, fonts } from '../theme';
+import WelcomeScreen from '../screens/WelcomeScreen';
+import { useTheme } from '../context/ThemeContext';
+import { colors, CONTENT_MAX_WIDTH, fonts, getThemeMode, themed, useIsWide } from '../theme';
 import { AppStackParamList, AuthStackParamList, TabParamList } from './types';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
-const navTheme = {
-  ...DefaultTheme,
-  colors: { ...DefaultTheme.colors, background: colors.bg, primary: colors.brand, card: colors.bg, text: colors.ink },
-};
+function makeNavTheme() {
+  const base = getThemeMode() === 'dark' ? DarkTheme : DefaultTheme;
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      background: colors.bg,
+      primary: colors.brand,
+      card: colors.bg,
+      text: colors.ink,
+      border: colors.line,
+    },
+  };
+}
 
-const stackOptions: NativeStackNavigationOptions = {
+const makeStackOptions = (): NativeStackNavigationOptions => ({
   headerStyle: { backgroundColor: colors.bg },
   headerShadowVisible: false,
   headerTintColor: colors.ink,
@@ -39,7 +52,7 @@ const stackOptions: NativeStackNavigationOptions = {
   headerTitleStyle: { fontFamily: fonts.bold, fontSize: 16, color: colors.ink },
   headerBackButtonDisplayMode: 'minimal',
   contentStyle: { backgroundColor: colors.bg },
-};
+});
 
 const TABS: Record<keyof TabParamList, { icon: string; label: string }> = {
   Buscar: { icon: 'navigate', label: 'Buscar' },
@@ -48,49 +61,79 @@ const TABS: Record<keyof TabParamList, { icon: string; label: string }> = {
   Perfil: { icon: 'person', label: 'Perfil' },
 };
 
+function TabIcon({ name, focused }: { name: keyof TabParamList; focused: boolean }) {
+  const base = TABS[name].icon;
+  const icon = (focused ? base : `${base}-outline`) as keyof typeof Ionicons.glyphMap;
+  return <Ionicons name={icon} size={21} color={focused ? colors.brand : colors.inkFaint} />;
+}
+
+/** Barra superior usada em telas largas (desktop/tablet deitado). */
+function TopNav({ state, navigation }: BottomTabBarProps) {
+  return (
+    <View style={styles.topNav}>
+      <View style={styles.topNavInner}>
+        <Logo size={32} />
+        <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+          {state.routes.map((route, index) => {
+            const focused = state.index === index;
+            const name = route.name as keyof TabParamList;
+            return (
+              <Pressable
+                key={route.key}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: focused }}
+                onPress={() => {
+                  const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+                  if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
+                }}
+                style={({ hovered, pressed }: { hovered?: boolean; pressed: boolean }) => [
+                  styles.topNavItem,
+                  (hovered || pressed) && !focused && { backgroundColor: colors.surfaceAlt },
+                  focused && { backgroundColor: colors.brandSoft },
+                ]}
+              >
+                <TabIcon name={name} focused={focused} />
+                <Text style={[styles.topNavLabel, focused && { color: colors.brandDark, fontFamily: fonts.bold }]}>
+                  {TABS[name].label}
+                </Text>
+              </Pressable>
+            );
+          })}
+          <View style={{ marginLeft: 8 }}>
+            <ThemeToggle size={38} />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function Tabs() {
   const insets = useSafeAreaInsets();
+  const wide = useIsWide();
   return (
     <Tab.Navigator
+      tabBar={wide ? (props) => <TopNav {...props} /> : undefined}
       screenOptions={({ route }) => ({
-        headerStyle: { backgroundColor: colors.bg },
-        headerShadowVisible: false,
-        headerTitleAlign: 'left',
-        headerTitleStyle: { fontFamily: fonts.extrabold, fontSize: 24, color: colors.ink, letterSpacing: -0.4 },
+        headerShown: false,
+        tabBarPosition: wide ? 'top' : 'bottom',
         sceneStyle: { backgroundColor: colors.bg },
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopWidth: 0,
-          height: 68 + insets.bottom,
-          paddingTop: 8,
-          paddingBottom: 8 + insets.bottom,
-          boxShadow: '0 -4px 24px rgba(22,33,30,0.06)',
-        } as object,
-        tabBarIcon: ({ focused }) => {
-          const base = TABS[route.name].icon;
-          const name = (focused ? base : `${base}-outline`) as keyof typeof Ionicons.glyphMap;
-          return (
-            <View
-              style={{
-                width: 56,
-                height: 30,
-                borderRadius: 15,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: focused ? colors.brandSoft : 'transparent',
-              }}
-            >
-              <Ionicons name={name} size={20} color={focused ? colors.brandDark : colors.inkFaint} />
-            </View>
-          );
+          borderTopWidth: 1,
+          borderTopColor: colors.line,
+          height: 60 + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: 6 + insets.bottom,
         },
+        tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
         tabBarLabel: ({ focused }) => (
           <Text
             style={{
               fontFamily: focused ? fonts.bold : fonts.medium,
-              fontSize: 11.5,
-              marginTop: 4,
-              color: focused ? colors.brandDark : colors.inkFaint,
+              fontSize: 11,
+              marginTop: 2,
+              color: focused ? colors.brand : colors.inkFaint,
             }}
           >
             {TABS[route.name].label}
@@ -98,27 +141,45 @@ function Tabs() {
         ),
       })}
     >
-      <Tab.Screen name="Buscar" component={SearchRouteScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Relatos" component={ReportsListScreen} options={{ title: 'Relatos' }} />
-      <Tab.Screen name="MinhasRotas" component={MyRoutesScreen} options={{ title: 'Rotas salvas' }} />
-      <Tab.Screen name="Perfil" component={ProfileScreen} options={{ headerShown: false }} />
+      <Tab.Screen name="Buscar" component={SearchRouteScreen} />
+      <Tab.Screen name="Relatos" component={ReportsListScreen} />
+      <Tab.Screen name="MinhasRotas" component={MyRoutesScreen} />
+      <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
 
+// Guarda o estado da navegação para que trocar o tema (que recria a árvore) não volte à tela inicial.
+const savedNavState: Partial<Record<string, NavigationState>> = {};
+
 export default function AppNavigator() {
   const { user, loading } = useAuth();
+  const { mode } = useTheme();
 
   if (loading) return <Loading />;
 
   // A "key" recria a navegação a cada troca de fluxo (login → perfil → app). Sem isso, ao salvar o
   // perfil pela primeira vez o container reaproveitava o estado e ficava preso na tela de perfil.
   const flow = !user ? 'auth' : !user.profile ? 'onboarding' : 'app';
+  // Ao sair, esquece onde o usuário estava: o próximo login começa na tela inicial.
+  if (flow === 'auth') {
+    delete savedNavState.app;
+    delete savedNavState.onboarding;
+  }
+  const stackOptions = makeStackOptions();
   return (
-    <NavigationContainer key={flow} theme={navTheme}>
+    <NavigationContainer
+      key={`${flow}-${mode}`}
+      theme={makeNavTheme()}
+      initialState={savedNavState[flow]}
+      onStateChange={(state) => {
+        savedNavState[flow] = state;
+      }}
+    >
       {!user ? (
         <AuthStack.Navigator key="auth" screenOptions={stackOptions}>
-          <AuthStack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <AuthStack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
+          <AuthStack.Screen name="Login" component={LoginScreen} options={{ title: '' }} />
           <AuthStack.Screen name="Register" component={RegisterScreen} options={{ title: '' }} />
         </AuthStack.Navigator>
       ) : !user.profile ? (
@@ -144,3 +205,19 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+
+const styles = themed(() => StyleSheet.create({
+  topNav: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.line },
+  topNavInner: {
+    width: '100%',
+    maxWidth: 1080,
+    alignSelf: 'center',
+    height: 64,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  topNavItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, height: 40, borderRadius: 10 },
+  topNavLabel: { fontFamily: fonts.semibold, fontSize: 14, color: colors.inkSoft },
+}));

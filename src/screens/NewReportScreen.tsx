@@ -7,7 +7,7 @@ import { Button, Field, IconBubble, Row, Screen, SectionHeader, T } from '../com
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { CATEGORY_ICONS, CATEGORY_LABELS, createReport, REPORT_TTL_HOURS } from '../storage/reports';
-import { colors, fonts, radius, shadow, spacing } from '../theme';
+import { colors, elev, fonts, radius, spacing, themed } from '../theme';
 import { ReportCategory } from '../types';
 import { notify } from '../utils/dialog';
 import { CATEGORY_TONES } from './ReportsListScreen';
@@ -99,7 +99,7 @@ export default function NewReportScreen({ navigation, route }: Props) {
                 setCategory(c);
                 setErrors((e) => ({ ...e, category: '' }));
               }}
-              style={({ pressed }) => [styles.cat, shadow, active && styles.catActive, pressed && { opacity: 0.9 }]}
+              style={({ pressed }) => [styles.cat, elev.shadow, active && styles.catActive, pressed && { opacity: 0.9 }]}
               accessibilityRole="radio"
               accessibilityState={{ selected: active }}
               accessibilityLabel={CATEGORY_LABELS[c]}
@@ -181,7 +181,7 @@ export default function NewReportScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   cat: {
     width: '31%',
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  catActive: { borderColor: colors.brand, backgroundColor: '#F4FAF8' },
+  catActive: { borderColor: colors.brand, backgroundColor: colors.brandSoft },
   catText: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.ink },
   photo: { width: '100%', height: 210, borderRadius: radius.lg },
   photoActions: { position: 'absolute', top: 10, right: 10 },
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(22,33,30,0.65)',
+    backgroundColor: colors.overlay,
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: radius.pill,
@@ -218,4 +218,4 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-});
+}));

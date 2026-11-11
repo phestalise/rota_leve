@@ -17,17 +17,9 @@ import {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 import Svg, { Circle } from 'react-native-svg';
-import {
-  colors,
-  fonts,
-  radius,
-  scoreTone,
-  shadow,
-  spacing,
-  Tone,
-  toneColors,
-} from '../theme';
+import { colors, CONTENT_MAX_WIDTH, elev, fonts, radius, scoreTone, spacing, themed, Tone, toneColors } from '../theme';
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -37,10 +29,10 @@ export type IconName = keyof typeof Ionicons.glyphMap;
 
 type Variant = 'display' | 'h1' | 'h2' | 'title' | 'body' | 'bodyStrong' | 'caption' | 'overline' | 'label';
 
-const variantStyles: Record<Variant, TextStyle> = {
-  display: { fontFamily: fonts.extrabold, fontSize: 30, lineHeight: 36, letterSpacing: -0.6, color: colors.ink },
-  h1: { fontFamily: fonts.extrabold, fontSize: 24, lineHeight: 30, letterSpacing: -0.4, color: colors.ink },
-  h2: { fontFamily: fonts.bold, fontSize: 19, lineHeight: 25, letterSpacing: -0.2, color: colors.ink },
+const variantStyles = themed((): Record<Variant, TextStyle> => ({
+  display: { fontFamily: fonts.extrabold, fontSize: 28, lineHeight: 34, letterSpacing: -0.6, color: colors.ink },
+  h1: { fontFamily: fonts.bold, fontSize: 22, lineHeight: 28, letterSpacing: -0.4, color: colors.ink },
+  h2: { fontFamily: fonts.bold, fontSize: 18, lineHeight: 24, letterSpacing: -0.2, color: colors.ink },
   title: { fontFamily: fonts.bold, fontSize: 16, lineHeight: 22, color: colors.ink },
   body: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.inkSoft },
   bodyStrong: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 22, color: colors.ink },
@@ -54,7 +46,7 @@ const variantStyles: Record<Variant, TextStyle> = {
     textTransform: 'uppercase',
     color: colors.inkFaint,
   },
-};
+}));
 
 export function T({
   variant = 'body',
@@ -102,12 +94,40 @@ export function Screen({
         )}
         {footer ? (
           <SafeAreaView edges={['bottom']} style={styles.footer}>
-            {footer}
+            <View style={styles.footerInner}>{footer}</View>
           </SafeAreaView>
         ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+/** Título de página usado nas abas (substitui o cabeçalho da navegação). */
+export function PageHeader({
+  title,
+  subtitle,
+  right,
+}: {
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+}) {
+  return (
+    <Row style={{ justifyContent: 'space-between' }} align="flex-start">
+      <View style={{ flex: 1, gap: 2 }}>
+        <T variant="h1" style={{ fontSize: 24, lineHeight: 30 }}>
+          {title}
+        </T>
+        {subtitle ? <T variant="body">{subtitle}</T> : null}
+      </View>
+      {right}
+    </Row>
+  );
+}
+
+/** Centraliza o conteúdo e limita a largura em telas grandes. */
+export function Container({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  return <View style={[styles.container, style]}>{children}</View>;
 }
 
 export function Row({
@@ -134,13 +154,13 @@ export function Divider({ inset = 0 }: { inset?: number }) {
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'light';
 
-const buttonPalette: Record<ButtonVariant, { bg: string; fg: string }> = {
+const buttonPalette = themed((): Record<ButtonVariant, { bg: string; fg: string }> => ({
   primary: { bg: colors.brand, fg: colors.white },
   secondary: { bg: colors.brandSoft, fg: colors.brandDark },
   ghost: { bg: 'transparent', fg: colors.brand },
   danger: { bg: colors.badSoft, fg: colors.bad },
   light: { bg: colors.white, fg: colors.brandDark },
-};
+}));
 
 export function Button({
   title,
@@ -341,7 +361,7 @@ export function Card({
   style?: StyleProp<ViewStyle>;
   flat?: boolean;
 }) {
-  const base = [styles.card, !flat && shadow, flat && styles.cardFlat];
+  const base = [styles.card, !flat && elev.shadow, flat && styles.cardFlat];
   if (onPress) {
     return (
       <Pressable
@@ -549,7 +569,7 @@ export function ScoreRing({
       accessibilityLabel={`Nota de acessibilidade ${score} de 100`}
     >
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.bg} strokeWidth={sw} fill={colors.white} />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.bg} strokeWidth={sw} fill={colors.surface} />
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -613,16 +633,18 @@ export function Loading() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   screenContent: {
     padding: spacing.xl,
     gap: spacing.lg,
     paddingBottom: spacing.xxxl,
     width: '100%',
-    maxWidth: 680,
+    maxWidth: CONTENT_MAX_WIDTH,
     alignSelf: 'center',
   },
+  container: { width: '100%', maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: spacing.xl },
+  footerInner: { width: '100%', maxWidth: CONTENT_MAX_WIDTH - spacing.xl * 2, alignSelf: 'center', gap: spacing.sm },
   footer: {
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.xl,
@@ -630,10 +652,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.line,
-    gap: spacing.sm,
   },
   button: {
-    minHeight: 54,
+    minHeight: 50,
     borderRadius: radius.md,
     paddingHorizontal: spacing.xl,
     flexDirection: 'row',
@@ -642,13 +663,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   buttonSm: { minHeight: 40, paddingHorizontal: spacing.lg, borderRadius: radius.sm },
-  buttonText: { fontFamily: fonts.bold, fontSize: 15.5 },
+  buttonText: { fontFamily: fonts.bold, fontSize: 15 },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.line,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
@@ -656,7 +677,7 @@ const styles = StyleSheet.create({
   inputFocused: { borderColor: colors.brand },
   input: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 12,
     fontSize: 15,
     fontFamily: fonts.medium,
     color: colors.ink,
@@ -668,11 +689,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   segment: { flex: 1, paddingVertical: 9, borderRadius: radius.sm, alignItems: 'center' },
-  segmentActive: { backgroundColor: colors.surface, ...(shadow as object) },
+  segmentActive: { backgroundColor: colors.surface, ...(elev.shadow as object) },
   segmentText: { fontFamily: fonts.semibold, fontSize: 13.5, color: colors.inkSoft },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.md + 2,
     padding: spacing.lg,
     gap: spacing.md,
   },
@@ -698,12 +719,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   empty: { alignItems: 'center', paddingVertical: spacing.xxxl, paddingHorizontal: spacing.lg, gap: spacing.sm },
-  emptyHalo: {
-    padding: 14,
-    borderRadius: 40,
-    backgroundColor: colors.surface,
-    marginBottom: spacing.sm,
-    ...(shadow as object),
-  },
+  emptyHalo: { marginBottom: spacing.sm },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-});
+}));
+
+/** Alterna entre tema claro (vermelho + branco) e escuro (vermelho + preto). */
+export function ThemeToggle({ size = 40 }: { size?: number }) {
+  const { mode, toggle } = useTheme();
+  const dark = mode === 'dark';
+  return (
+    <Pressable
+      onPress={toggle}
+      accessibilityRole="button"
+      accessibilityLabel={dark ? 'Usar tema claro' : 'Usar tema escuro'}
+      hitSlop={6}
+      style={({ pressed }) => ({
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.line,
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      <Ionicons name={dark ? 'sunny-outline' : 'moon-outline'} size={size * 0.45} color={colors.ink} />
+    </Pressable>
+  );
+}

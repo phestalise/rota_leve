@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, radius, scoreTone, scoreVerdict, shadow, spacing, toneColors } from '../theme';
+import { colors, elev, fonts, radius, scoreTone, scoreVerdict, spacing, themed, toneColors } from '../theme';
 import { RouteStep, ScoredRoute, StepMode } from '../types';
 import { Row, ScoreRing, T } from './ui';
 
@@ -89,7 +89,7 @@ export default function RouteCard({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.card, shadow, best && styles.cardBest, pressed && { opacity: 0.94 }]}
+      style={({ pressed }) => [styles.card, elev.shadow, best && styles.cardBest, pressed && { opacity: 0.94 }]}
     >
       {best && (
         <Row gap={6} style={styles.bestRibbon}>
@@ -136,7 +136,7 @@ export default function RouteCard({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden' },
   cardBest: { borderWidth: 2, borderColor: colors.brand },
   bestRibbon: { backgroundColor: colors.brand, paddingHorizontal: spacing.lg, paddingVertical: 7 },
@@ -150,4 +150,4 @@ const styles = StyleSheet.create({
   footer: { borderTopWidth: 1, borderTopColor: colors.line, paddingTop: spacing.md },
   more: { backgroundColor: colors.badSoft, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1 },
   moreText: { fontFamily: fonts.bold, fontSize: 11, color: colors.bad },
-});
+}));

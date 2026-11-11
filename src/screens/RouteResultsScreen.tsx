@@ -10,7 +10,7 @@ import { MIN_ACCESSIBLE_SCORE, rankRoutes } from '../services/accessibility';
 import { profileIcon, profileLabel } from '../services/profiles';
 import { fetchCandidateRoutes } from '../services/routeProvider';
 import { getActiveReports } from '../storage/reports';
-import { colors, radius, shadow, spacing } from '../theme';
+import { colors, elev, radius, spacing, themed } from '../theme';
 import { ScoredRoute } from '../types';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'RouteResults'>;
@@ -37,12 +37,12 @@ export default function RouteResultsScreen({ route, navigation }: Props) {
   }, [load]);
 
   const trip = (
-    <View style={[styles.trip, shadow]}>
+    <View style={[styles.trip, elev.shadow]}>
       <Row gap={spacing.md}>
         <View style={styles.rail}>
           <View style={styles.originDot} />
           <View style={styles.railLine} />
-          <Ionicons name="location" size={15} color={colors.accent} />
+          <Ionicons name="location" size={15} color={colors.brand} />
         </View>
         <View style={{ flex: 1, gap: 10 }}>
           <T variant="bodyStrong" numberOfLines={1}>
@@ -117,11 +117,11 @@ export default function RouteResultsScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   trip: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
   rail: { alignItems: 'center', width: 16, alignSelf: 'stretch', paddingVertical: 5 },
   originDot: { width: 11, height: 11, borderRadius: 6, borderWidth: 3, borderColor: colors.brand },
   railLine: { width: 2, flex: 1, backgroundColor: colors.line, marginVertical: 3 },
   profile: { backgroundColor: colors.brandSoft, paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: radius.sm },
   loading: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xxxl },
-});
+}));

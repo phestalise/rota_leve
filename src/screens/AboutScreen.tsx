@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Logo from '../components/Logo';
 import { Card, IconBubble, IconName, Row, Screen, SectionHeader, T } from '../components/ui';
-import { colors, fonts, radius, spacing } from '../theme';
+import { colors, fonts, radius, spacing, themed } from '../theme';
 
 const STEPS: { icon: IconName; title: string; text: string }[] = [
   {
@@ -32,21 +33,13 @@ export default function AboutScreen() {
   const version = Constants.expoConfig?.version ?? '1.0.0';
   return (
     <Screen>
-      <View style={styles.hero}>
-        <View style={[styles.circle, { width: 180, height: 180, top: -60, right: -50 }]} />
-        <View style={styles.logo}>
-          <Ionicons name="walk" size={28} color={colors.brand} />
-        </View>
-        <T variant="h1" color={colors.white}>
-          Rota Leve
-        </T>
-        <T variant="body" color="rgba(255,255,255,0.85)">
-          O caminho mais fácil, não só o mais rápido.
-        </T>
+      <View style={{ gap: spacing.sm }}>
+        <Logo size={48} />
+        <T variant="body">O caminho mais fácil, não só o mais rápido.</T>
       </View>
 
       <Card style={styles.quote}>
-        <Ionicons name="chatbox-ellipses" size={22} color={colors.accent} />
+        <Ionicons name="chatbox-ellipses" size={22} color={colors.brand} />
         <T variant="body" color={colors.ink} style={{ fontSize: 15.5, lineHeight: 24 }}>
           A Júlia está grávida de 8 meses e precisa ir ao pré-natal. O app comum manda ela pela estação com o
           elevador quebrado. No Rota Leve, essa rota cai para o fim da lista e ela recebe uma alternativa com
@@ -98,19 +91,8 @@ export default function AboutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  hero: { backgroundColor: colors.brand, borderRadius: radius.xl, padding: spacing.xl, gap: 4, overflow: 'hidden' },
-  circle: { position: 'absolute', borderRadius: 999, backgroundColor: colors.white, opacity: 0.09 },
-  logo: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  quote: { gap: spacing.sm, borderLeftWidth: 4, borderLeftColor: colors.accent },
+const styles = themed(() => StyleSheet.create({
+  quote: { gap: spacing.sm, borderLeftWidth: 4, borderLeftColor: colors.brand },
   stepNum: {
     position: 'absolute',
     bottom: -4,
@@ -118,14 +100,14 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brand,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.white,
+    borderColor: colors.surface,
   },
   stepNumText: { fontFamily: fonts.extrabold, fontSize: 9.5, color: colors.white },
   ods: { flex: 1, borderRadius: radius.lg, padding: spacing.lg, gap: 4 },
   odsNum: { fontFamily: fonts.extrabold, fontSize: 30, color: colors.white },
   odsText: { fontFamily: fonts.bold, fontSize: 13, lineHeight: 17, color: colors.white },
-});
+}));

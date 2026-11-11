@@ -3,7 +3,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { activeReportsFor } from '../services/accessibility';
 import { STATIONS } from '../services/stations';
-import { colors, fonts, spacing } from '../theme';
+import { colors, fonts, spacing, themed } from '../theme';
 import { Report, RouteStep, StepMode } from '../types';
 import { MODE_COLORS, MODE_ICONS } from './RouteCard';
 import { Row, T } from './ui';
@@ -128,7 +128,7 @@ export default function RouteTimeline({
             {last && (
               <Row gap={spacing.md}>
                 <View style={styles.nodeCol}>
-                  <Ionicons name="location" size={20} color={colors.accent} />
+                  <Ionicons name="location" size={20} color={colors.brand} />
                 </View>
                 <T variant="title" style={{ flex: 1, fontSize: 15 }}>
                   {s.to}
@@ -142,7 +142,7 @@ export default function RouteTimeline({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   nodeCol: { width: 20, alignItems: 'center' },
   node: { width: 14, height: 14, borderRadius: 7, borderWidth: 3, backgroundColor: colors.white },
   segment: { width: 5, flex: 1, borderRadius: 3, marginVertical: 3 },
@@ -154,4 +154,4 @@ const styles = StyleSheet.create({
   facilityText: { fontFamily: fonts.semibold, fontSize: 10.5 },
   alert: { backgroundColor: colors.badSoft, padding: 8, borderRadius: 8 },
   reportText: { fontFamily: fonts.semibold, fontSize: 12, color: colors.inkFaint },
-});
+}));

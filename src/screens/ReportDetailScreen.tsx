@@ -9,7 +9,7 @@ import { AppStackParamList } from '../navigation/types';
 import { placesOf } from '../services/accessibility';
 import { CATEGORY_ICONS, CATEGORY_LABELS, confirmReport, deleteReport, getReport, resolveReport } from '../storage/reports';
 import { getSavedRoutes } from '../storage/routes';
-import { colors, fonts, radius, spacing, toneColors } from '../theme';
+import { colors, fonts, radius, spacing, themed, toneColors } from '../theme';
 import { Report } from '../types';
 import { confirmAction, notify } from '../utils/dialog';
 import { formatDate, normalize } from '../utils/id';
@@ -110,7 +110,6 @@ export default function ReportDetailScreen({ route, navigation }: Props) {
           <Image source={{ uri: report.photoUri }} style={styles.photo} resizeMode="cover" />
         ) : (
           <View style={[styles.photo, styles.photoEmpty, { backgroundColor: toneColors(tone).bg }]}>
-            <View style={[styles.circleDeco, { backgroundColor: toneColors(tone).fg }]} />
             <IconBubble icon={CATEGORY_ICONS[report.category] as keyof typeof Ionicons.glyphMap} tone={tone} size={76} solid />
             <T variant="caption" color={toneColors(tone).fg} style={{ fontFamily: fonts.semibold, marginTop: spacing.sm }}>
               Relato sem foto
@@ -177,7 +176,7 @@ function Info({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; la
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   photo: { width: '100%', height: 230, borderRadius: radius.xl },
   photoEmpty: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden', height: 190 },
   circleDeco: { position: 'absolute', width: 260, height: 260, borderRadius: 130, opacity: 0.07, top: -80, right: -70 },
@@ -186,4 +185,4 @@ const styles = StyleSheet.create({
   statValue: { fontFamily: fonts.extrabold, fontSize: 26, color: colors.ink, letterSpacing: -0.5 },
   delete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: spacing.md },
   deleteText: { fontFamily: fonts.bold, fontSize: 14, color: colors.bad },
-});
+}));

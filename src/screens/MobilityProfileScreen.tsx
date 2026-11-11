@@ -7,7 +7,7 @@ import { Button, Card, Divider, IconBubble, IconName, Row, Screen, SectionHeader
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { MOBILITY_OPTIONS, WALK_LIMITS } from '../services/profiles';
-import { colors, fonts, radius, shadow, spacing } from '../theme';
+import { colors, elev, fonts, radius, spacing, themed } from '../theme';
 import { MobilityProfile, MobilityType } from '../types';
 import { notify } from '../utils/dialog';
 
@@ -185,7 +185,7 @@ function Toggle({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   option: {
     width: '47%',
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     borderWidth: 2,
     borderColor: 'transparent',
-    ...(shadow as object),
+    ...(elev.shadow as object),
   },
   optionActive: { borderColor: colors.brand, backgroundColor: '#F4FAF8' },
   optionLabel: { fontFamily: fonts.bold, fontSize: 14.5, color: colors.ink },
@@ -217,4 +217,4 @@ const styles = StyleSheet.create({
   walkBar: { height: 10, alignSelf: 'stretch', borderRadius: 5, backgroundColor: colors.surfaceAlt },
   walkBarActive: { height: 14, marginTop: -2, backgroundColor: colors.brandDark },
   walkLabel: { fontFamily: fonts.medium, fontSize: 11.5, color: colors.inkFaint },
-});
+}));
