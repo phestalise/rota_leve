@@ -1,138 +1,126 @@
 import React from 'react';
-import { StyleProp, View, ViewStyle } from 'react-native';
-import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import { Image, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { colors, fonts, getThemeMode } from '../theme';
 
 /**
- * Mapa ilustrativo da tela de boas-vindas: a rota mais rápida (cinza) passa por um elevador
- * quebrado; a rota acessível (vermelha) desvia e chega ao destino.
- * O desenho preenche o contêiner (slice), com o conteúdo importante no centro.
+ * Mapa real (OpenStreetMap) da região da Av. Paulista, em São Paulo.
+ * Por cima, em vetor: a rota acessível pela Paulista (vermelha), do MASP até a Consolação, e a rota evitada pela Alameda Santos (cinza), que tem calçada esburacada.
+ *
+ * As coordenadas do SVG são as mesmas pixels da imagem original (1490 x 1850). Imagem e SVG
+ * usam o mesmo recorte central ("cover" / "slice"), então ficam alinhados em qualquer tamanho.
  */
-export default function MapIllustration({ style }: { style?: StyleProp<ViewStyle> }) {
-  const dark = getThemeMode() === 'dark';
-  const ground = dark ? '#141414' : '#ECECE8';
-  const block = dark ? '#1B1B1B' : '#E3E3DE';
-  const street = dark ? '#2B2B2B' : '#FFFFFF';
-  const park = dark ? '#132219' : '#DCEEDC';
-  const water = dark ? '#111D27' : '#D8E6F2';
+const MAP_LIGHT = require('../../assets/map-light.jpg');
+const MAP_DARK = require('../../assets/map-dark.jpg');
 
-  const H = [90, 210, 330, 440];
-  const V = [80, 190, 300];
+const W = 1490;
+const H = 1850;
+
+const ORIGIN = { x: 1170, y: 1254 }; // Av. Paulista, perto do MASP
+const DEST = { x: 330, y: 441 }; // perto da Estação Consolação
+const ROUTE = `M${ORIGIN.x} ${ORIGIN.y} L${DEST.x} ${DEST.y}`; // Av. Paulista
+const AVOIDED = `M${ORIGIN.x} ${ORIGIN.y} L1071 1356 L580 883 L679 781`; // Alameda Santos
+const PROBLEM = { x: 850, y: 1143 };
+
+export default function MapIllustration({
+  style,
+  attributionOffset = 4,
+}: {
+  style?: StyleProp<ViewStyle>;
+  /** Distância do crédito do mapa até a borda de baixo (para não ficar sob outro elemento). */
+  attributionOffset?: number;
+}) {
+  const dark = getThemeMode() === 'dark';
+  const halo = dark ? '#0A0A0A' : '#FFFFFF';
 
   return (
-    <View style={[{ overflow: 'hidden', backgroundColor: ground }, style]}>
-      <Svg width="100%" height="100%" viewBox="0 0 380 520" preserveAspectRatio="xMidYMid slice">
-        <Rect x={-200} y={-200} width={780} height={920} fill={ground} />
-
-        {/* rio */}
-        <Path d="M-200 520 C-40 470 60 540 180 505 C260 482 330 520 580 470 L580 720 L-200 720 Z" fill={water} />
-
-        {/* quarteirões */}
-        <G>
-          {[
-            [92, 102, 86, 96],
-            [92, 222, 86, 96],
-            [202, 102, 86, 96],
-            [-40, 102, 108, 96],
-            [-40, 222, 108, 96],
-            [312, 222, 120, 96],
-            [312, 342, 120, 86],
-            [92, 342, 86, 86],
-            [-40, -40, 108, 118],
-            [92, -40, 86, 118],
-            [202, -40, 86, 118],
-            [312, -40, 120, 118],
-            [312, 102, 120, 96],
-          ].map(([x, y, w, h], i) => (
-            <Rect key={i} x={x} y={y} width={w} height={h} rx={8} fill={block} />
-          ))}
-          {/* parque */}
-          <Rect x={202} y={222} width={86} height={96} rx={10} fill={park} />
-          <Rect x={202} y={342} width={86} height={86} rx={8} fill={block} />
-        </G>
-
-        {/* ruas */}
-        <G>
-          {H.map((y) => (
-            <Line key={`h${y}`} x1={-200} y1={y} x2={580} y2={y} stroke={street} strokeWidth={14} />
-          ))}
-          {V.map((x) => (
-            <Line key={`v${x}`} x1={x} y1={-200} x2={x} y2={720} stroke={street} strokeWidth={14} />
-          ))}
-        </G>
-
-        {/* rota mais rápida (evitada) */}
+    <View style={[{ overflow: 'hidden', backgroundColor: dark ? '#111' : '#EEE' }, style]}>
+      <Image
+        source={dark ? MAP_DARK : MAP_LIGHT}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+        accessibilityIgnoresInvertColors
+      />
+      <Svg
+        style={StyleSheet.absoluteFill}
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMid slice"
+      >
+        {/* rota evitada */}
         <Path
-          d="M80 440 L80 330 L190 330 L190 90 L300 90"
-          stroke={colors.inkFaint}
-          strokeWidth={5}
-          strokeDasharray="2 10"
+          d={AVOIDED}
+          stroke={dark ? '#A0A0A0' : '#3A3A3A'}
+          strokeWidth={16}
+          strokeDasharray="4 32"
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="none"
         />
 
         {/* rota acessível */}
-        <Path
-          d="M80 440 L300 440 L300 90"
-          stroke={street}
-          strokeWidth={14}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <Path
-          d="M80 440 L300 440 L300 90"
-          stroke={colors.brand}
-          strokeWidth={8}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
+        <Path d={ROUTE} stroke={halo} strokeWidth={46} strokeLinecap="round" fill="none" opacity={0.9} />
+        <Path d={ROUTE} stroke={colors.brand} strokeWidth={28} strokeLinecap="round" fill="none" />
         {[
-          [190, 440],
-          [300, 330],
-          [300, 210],
+          [508, 613],
+          [795, 891],
+          [1000, 1089],
         ].map(([x, y]) => (
-          <Circle key={`${x}-${y}`} cx={x} cy={y} r={5} fill={street} stroke={colors.brand} strokeWidth={3} />
+          <Circle key={x} cx={x} cy={y} r={15} fill={halo} stroke={colors.brand} strokeWidth={9} />
         ))}
 
-        {/* elevador quebrado */}
-        <Circle cx={190} cy={330} r={13} fill={colors.bad} stroke={street} strokeWidth={3} />
-        <Path d="M184.5 324.5 L195.5 335.5 M195.5 324.5 L184.5 335.5" stroke="#FFFFFF" strokeWidth={3} strokeLinecap="round" />
+        {/* problema na rota evitada */}
+        <Circle cx={PROBLEM.x} cy={PROBLEM.y} r={40} fill={colors.bad} stroke={halo} strokeWidth={10} />
+        <Path
+          d={`M${PROBLEM.x - 16} ${PROBLEM.y - 16} L${PROBLEM.x + 16} ${PROBLEM.y + 16} M${PROBLEM.x + 16} ${PROBLEM.y - 16} L${PROBLEM.x - 16} ${PROBLEM.y + 16}`}
+          stroke="#FFFFFF"
+          strokeWidth={10}
+          strokeLinecap="round"
+        />
         <G>
-          <Rect x={58} y={276} width={126} height={28} rx={14} fill={colors.surface} />
-          <SvgText x={121} y={294.5} fontSize={11.5} fontFamily={fonts.semibold} fill={colors.bad} textAnchor="middle">
-            Elevador quebrado
+          <Rect x={500} y={1200} width={400} height={76} rx={38} fill={colors.surface} />
+          <SvgText x={700} y={1251} fontSize={36} fontFamily={fonts.semibold} fill={colors.bad} textAnchor="middle">
+            Calçada esburacada
           </SvgText>
         </G>
 
         {/* nota da rota acessível */}
         <G>
-          <Rect x={184} y={362} width={110} height={34} rx={17} fill={colors.surface} />
-          <Circle cx={202} cy={379} r={11} fill={colors.good} />
-          <SvgText x={202} y={383} fontSize={10.5} fontFamily={fonts.extrabold} fill="#FFFFFF" textAnchor="middle">
+          <Rect x={900} y={760} width={330} height={100} rx={50} fill={colors.surface} />
+          <Circle cx={952} cy={810} r={34} fill={colors.good} />
+          <SvgText x={952} y={822} fontSize={32} fontFamily={fonts.extrabold} fill="#FFFFFF" textAnchor="middle">
             92
           </SvgText>
-          <SvgText x={219} y={383.5} fontSize={12} fontFamily={fonts.bold} fill={colors.ink}>
+          <SvgText x={1000} y={824} fontSize={38} fontFamily={fonts.bold} fill={colors.ink}>
             Acessível
           </SvgText>
         </G>
 
         {/* origem */}
-        <Circle cx={80} cy={440} r={11} fill={colors.surface} stroke={colors.ink} strokeWidth={5} />
+        <Circle cx={ORIGIN.x} cy={ORIGIN.y} r={34} fill={halo} stroke={colors.ink} strokeWidth={16} />
 
         {/* destino */}
-        <G>
+        <G transform={`translate(${DEST.x - 66} ${DEST.y - 196}) scale(3)`}>
           <Path
-            d="M300 96 C300 96 278 72 278 56 C278 43.8 287.8 34 300 34 C312.2 34 322 43.8 322 56 C322 72 300 96 300 96 Z"
+            d="M22 64 C22 64 0 40 0 22 C0 9.8 9.8 0 22 0 C34.2 0 44 9.8 44 22 C44 40 22 64 22 64 Z"
             fill={colors.brand}
-            stroke={street}
+            stroke={halo}
             strokeWidth={3}
           />
-          <Circle cx={300} cy={56} r={7.5} fill="#FFFFFF" />
+          <Circle cx={22} cy={22} r={8} fill="#FFFFFF" />
         </G>
       </Svg>
+      <Text style={[styles.attribution, { bottom: attributionOffset, color: dark ? '#888' : '#666' }]}>© OpenStreetMap</Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  attribution: {
+    position: 'absolute',
+    right: 8,
+    fontFamily: fonts.medium,
+    fontSize: 10,
+  },
+});

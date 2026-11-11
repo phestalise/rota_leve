@@ -60,7 +60,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ flex: 1 }}>
-        <MapIllustration style={StyleSheet.absoluteFill} />
+        <MapIllustration style={StyleSheet.absoluteFill} attributionOffset={34} />
         <Row style={[styles.mobileTop, { top: insets.top + spacing.md }]}>
           <View style={styles.logoChip}>
             <Logo size={30} />
