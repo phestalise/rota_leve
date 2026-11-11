@@ -118,7 +118,7 @@ function Tabs() {
         tabBarPosition: wide ? 'top' : 'bottom',
         sceneStyle: { backgroundColor: colors.bg },
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.bg,
           borderTopWidth: 1,
           borderTopColor: colors.line,
           height: 60 + insets.bottom,
@@ -206,7 +206,7 @@ export default function AppNavigator() {
 }
 
 const styles = themed(() => StyleSheet.create({
-  topNav: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.line },
+  topNav: { backgroundColor: colors.bg, borderBottomWidth: 1, borderBottomColor: colors.line },
   topNavInner: {
     width: '100%',
     maxWidth: 1080,

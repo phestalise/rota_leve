@@ -627,7 +627,7 @@ const styles = themed(() => StyleSheet.create({
   container: { width: '100%', maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: spacing.xl },
   footerInner: { width: '100%', maxWidth: CONTENT_MAX_WIDTH - spacing.xl * 2, alignSelf: 'center', gap: spacing.sm },
   footer: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bg,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
