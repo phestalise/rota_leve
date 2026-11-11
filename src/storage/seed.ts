@@ -132,7 +132,7 @@ export async function seedIfNeeded() {
     const saved: SavedRoute = {
       id: 'rot_seed_prenatal',
       userId: 'usr_julia',
-      name: 'Pré-natal (casa → Hospital São Paulo)',
+      name: 'Pré-natal no Hospital São Paulo',
       route: scoreRoute(viaSe, seedUsers[0].profile!, []),
       savedAt: ago(24 * 3),
     };

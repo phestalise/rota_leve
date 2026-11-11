@@ -1,30 +1,26 @@
-import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Logo from '../components/Logo';
-import { Button, IconBubble, IconName, Pill, Row, ScoreRing, T, ThemeToggle } from '../components/ui';
+import { Button, Pill, Row, ScoreRing, T, ThemeToggle } from '../components/ui';
 import { AuthStackParamList } from '../navigation/types';
 import { colors, radius, spacing, themed, useIsWide } from '../theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
-const FEATURES: { icon: IconName; title: string; text: string }[] = [
+const FEATURES: { title: string; text: string }[] = [
   {
-    icon: 'person-circle-outline',
-    title: 'Feito para o seu jeito de se deslocar',
-    text: 'Gestante, cadeira de rodas, carrinho de bebê, idoso(a) ou mobilidade reduzida.',
+    title: 'Você diz como se desloca',
+    text: 'Gestante, cadeira de rodas, carrinho de bebê, pessoa idosa ou com mobilidade reduzida.',
   },
   {
-    icon: 'podium-outline',
-    title: 'Cada rota ganha uma nota',
-    text: 'Escadas, elevadores, caminhada, ladeiras e bancos entram na conta.',
+    title: 'O app dá uma nota para cada rota',
+    text: 'Conta escadas, elevadores, distância a pé, ladeiras e se tem onde sentar.',
   },
   {
-    icon: 'megaphone-outline',
-    title: 'Avisos da comunidade',
-    text: 'Elevador quebrado na sua rota? Você fica sabendo antes de sair de casa.',
+    title: 'Outros usuários avisam dos problemas',
+    text: 'Se o elevador de uma estação da sua rota quebrar, você recebe um aviso.',
   },
 ];
 
@@ -35,22 +31,19 @@ function RoutePreview() {
       <Row gap={spacing.md}>
         <ScoreRing score={92} size={56} />
         <View style={{ flex: 1, gap: 2 }}>
-          <T variant="overline" style={{ fontSize: 10.5 }}>
-            Melhor rota para gestante
-          </T>
-          <T variant="title">Tatuapé → Hospital São Paulo</T>
+          <T variant="overline">Exemplo para gestante</T>
+          <T variant="title">Tatuapé até Hospital São Paulo</T>
           <T variant="caption">42 min · 1 baldeação · 380 m a pé</T>
         </View>
       </Row>
       <Row gap={6} style={{ flexWrap: 'wrap' }}>
-        <Pill text="Elevador funcionando" tone="good" icon="arrow-up-circle-outline" />
-        <Pill text="Sem escadas" tone="good" icon="footsteps-outline" />
-        <Pill text="Assento no trajeto" tone="brand" icon="cafe-outline" />
+        <Pill text="Elevador funcionando" tone="good" />
+        <Pill text="Sem escadas" tone="good" />
+        <Pill text="Tem onde sentar" tone="neutral" />
       </Row>
       <View style={styles.previewAlert}>
-        <Ionicons name="warning" size={16} color={colors.bad} />
         <T variant="caption" color={colors.ink} style={{ flex: 1 }}>
-          A rota mais rápida passa pela Sé, com o elevador fora de serviço, e ficou para o fim da lista.
+          A rota mais rápida passa pela Sé, onde o elevador está quebrado. Por isso ela aparece por último.
         </T>
       </View>
     </View>
@@ -63,7 +56,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 
   const actions = (
     <View style={{ gap: spacing.sm }}>
-      <Button title="Criar conta" iconRight="arrow-forward" onPress={() => navigation.navigate('Register')} />
+      <Button title="Criar conta" onPress={() => navigation.navigate('Register')} />
       <Button title="Já tenho conta" variant="secondary" onPress={() => navigation.navigate('Login')} />
     </View>
   );
@@ -71,20 +64,22 @@ export default function WelcomeScreen({ navigation }: Props) {
   const intro = (
     <View style={{ gap: spacing.md }}>
       <T variant="display" style={wide ? { fontSize: 44, lineHeight: 52, letterSpacing: -1 } : { fontSize: 32, lineHeight: 38 }}>
-        O caminho mais <T variant="display" color={colors.brand} style={wide ? { fontSize: 44, lineHeight: 52 } : { fontSize: 32, lineHeight: 38 }}>fácil</T>, não só o mais rápido.
+        Transporte público com menos escada e menos caminhada.
       </T>
       <T variant="body" style={{ fontSize: 16, lineHeight: 24 }}>
-        Rotas de transporte público em São Paulo avaliadas para quem não pode encarar escada, caminhada
-        longa ou elevador quebrado.
+        O Rota Leve compara as opções de ônibus, metrô e trem em São Paulo e mostra primeiro as que
+        são mais fáceis para você.
       </T>
     </View>
   );
 
   const features = (
     <View style={{ gap: spacing.lg }}>
-      {FEATURES.map((f) => (
+      {FEATURES.map((f, i) => (
         <Row key={f.title} gap={spacing.md} align="flex-start">
-          <IconBubble icon={f.icon} size={40} />
+          <T variant="title" color={colors.brand} style={{ width: 18 }}>
+            {i + 1}
+          </T>
           <View style={{ flex: 1, gap: 2 }}>
             <T variant="title" style={{ fontSize: 15 }}>
               {f.title}
@@ -115,7 +110,7 @@ export default function WelcomeScreen({ navigation }: Props) {
             {intro}
             {features}
             <Row gap={spacing.sm}>
-              <Button title="Criar conta" iconRight="arrow-forward" onPress={() => navigation.navigate('Register')} style={{ paddingHorizontal: 28 }} />
+              <Button title="Criar conta" onPress={() => navigation.navigate('Register')} style={{ paddingHorizontal: 28 }} />
               <Button title="Já tenho conta" variant="secondary" onPress={() => navigation.navigate('Login')} style={{ paddingHorizontal: 28 }} />
             </Row>
           </View>
@@ -124,7 +119,7 @@ export default function WelcomeScreen({ navigation }: Props) {
           </View>
         </Row>
         <T variant="caption" color={colors.inkFaint}>
-          Global Solution 2026 · ODS 10 e 11
+          Global Solution 2026, FIAP
         </T>
       </ScrollView>
     );

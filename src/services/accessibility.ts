@@ -178,7 +178,7 @@ function explain(
   let text = parts.join(', ') + '.';
   text += endHasSeat ? ' O ponto final tem banco.' : ' O ponto final não tem banco.';
   if (blocked) text += ' Atenção: há trecho sem acesso por elevador, inviável para cadeira de rodas.';
-  else if (issues.length > 0) text += ` Fique atenta(o): ${issues[0].charAt(0).toLowerCase()}${issues[0].slice(1)}.`;
+  else if (issues.length > 0) text += ` Atenção: ${issues[0].charAt(0).toLowerCase()}${issues[0].slice(1)}.`;
   return text;
 }
 

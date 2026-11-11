@@ -54,9 +54,8 @@ export default function RouteResultsScreen({ route, navigation }: Props) {
         </View>
       </Row>
       <Row gap={6} style={styles.profile}>
-        <Ionicons name={profileIcon(user?.profile?.type)} size={14} color={colors.brandDark} />
         <T variant="caption" color={colors.brandDark} style={{ flex: 1 }}>
-          Ordenado pela nota para o perfil “{profileLabel(user?.profile?.type)}”
+          Ordenadas pela nota para o perfil: {profileLabel(user?.profile?.type)}
         </T>
       </Row>
     </View>

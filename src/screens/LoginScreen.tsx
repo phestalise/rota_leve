@@ -94,7 +94,6 @@ export default function LoginScreen({ navigation }: Props) {
           <Button title="Entrar" iconRight="arrow-forward" onPress={handleLogin} loading={loading} />
 
           <Pressable onPress={useTestAccount} style={styles.testCard} accessibilityRole="button">
-            <Ionicons name="flask-outline" size={18} color={colors.brand} />
             <View style={{ flex: 1 }}>
               <T variant="label">Usar conta de teste</T>
               <T variant="caption">

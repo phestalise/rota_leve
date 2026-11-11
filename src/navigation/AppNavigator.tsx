@@ -92,7 +92,6 @@ function TopNav({ state, navigation }: BottomTabBarProps) {
                   focused && { backgroundColor: colors.brandSoft },
                 ]}
               >
-                <TabIcon name={name} focused={focused} />
                 <Text style={[styles.topNavLabel, focused && { color: colors.brandDark, fontFamily: fonts.bold }]}>
                   {TABS[name].label}
                 </Text>

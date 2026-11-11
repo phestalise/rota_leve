@@ -49,7 +49,7 @@ export const MOBILITY_OPTIONS: {
   },
   {
     type: 'idoso',
-    label: 'Sou idoso(a)',
+    label: 'Sou uma pessoa idosa',
     description: 'Caminhadas curtas, assento e poucas baldeações.',
     icon: 'body-outline',
     defaults: {

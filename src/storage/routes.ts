@@ -27,7 +27,7 @@ export async function saveRoute(userId: string, route: ScoredRoute, name?: strin
   const saved: SavedRoute = {
     id: uid('rot'),
     userId,
-    name: name?.trim() || `${route.origin} → ${route.destination}`,
+    name: name?.trim() || `${route.origin} até ${route.destination}`,
     route,
     savedAt: new Date().toISOString(),
   };

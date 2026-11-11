@@ -76,13 +76,10 @@ export default function ProfileScreen() {
           onAction={() => navigation.navigate('ProfileSetup', { firstTime: false })}
         />
         <Card>
-          <Row gap={spacing.md}>
-            <IconBubble icon={profileIcon(profile?.type)} size={46} solid />
-            <View style={{ flex: 1 }}>
-              <T variant="title">{profileLabel(profile?.type)}</T>
-              <T variant="caption">Até {profile?.maxWalkMeters ?? 0} m de caminhada por viagem</T>
-            </View>
-          </Row>
+          <View>
+            <T variant="title">{profileLabel(profile?.type)}</T>
+            <T variant="caption">Até {profile?.maxWalkMeters ?? 0} m de caminhada por viagem</T>
+          </View>
           {profile && (
             <Row gap={6} style={{ flexWrap: 'wrap' }}>
               {profile.avoidStairs && <Pill text="Sem escadas" tone="brand" icon="footsteps-outline" />}
@@ -111,9 +108,9 @@ export default function ProfileScreen() {
             subtitle="Escadas, elevador, assento e caminhada"
             onPress={() => navigation.navigate('ProfileSetup', { firstTime: false })}
           />
-          <Divider inset={70} />
+          <Divider inset={16} />
           <ListRow icon="information-circle-outline" title="Sobre o App" subtitle="Como o Rota Leve funciona" onPress={() => navigation.navigate('About')} />
-          <Divider inset={70} />
+          <Divider inset={16} />
           <ListRow icon="log-out-outline" title="Sair" danger onPress={handleLogout} />
         </Card>
       </Container>

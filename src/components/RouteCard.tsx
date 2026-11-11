@@ -93,8 +93,7 @@ export default function RouteCard({
     >
       {best && (
         <Row gap={6} style={styles.bestRibbon}>
-          <Ionicons name="sparkles" size={13} color={colors.white} />
-          <Text style={styles.bestText}>Melhor opção para você</Text>
+          <Text style={styles.bestText}>Melhor nota</Text>
         </Row>
       )}
       <View style={styles.inner}>
@@ -142,7 +141,7 @@ const styles = themed(() => StyleSheet.create({
   bestRibbon: { backgroundColor: colors.brand, paddingHorizontal: spacing.lg, paddingVertical: 7 },
   bestText: { fontFamily: fonts.bold, fontSize: 12.5, color: colors.white, letterSpacing: 0.2 },
   inner: { padding: spacing.lg, gap: spacing.md },
-  verdict: { fontFamily: fonts.bold, fontSize: 11.5, letterSpacing: 0.6, textTransform: 'uppercase' },
+  verdict: { fontFamily: fonts.semibold, fontSize: 12.5 },
   strip: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
   modeChip: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
   modeChipText: { fontFamily: fonts.bold, fontSize: 11.5, color: colors.white },

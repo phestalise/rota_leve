@@ -5,14 +5,13 @@ import React, { useCallback, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Logo from '../components/Logo';
-import { Banner, Button, IconBubble, Row, ScoreRing, T, ThemeToggle } from '../components/ui';
+import { Banner, Button, Row, ScoreRing, T, ThemeToggle } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { scoreRoute } from '../services/accessibility';
 import { alertMessage, getRouteAlerts, RouteAlert } from '../services/alerts';
-import { profileIcon } from '../services/profiles';
 import { DESTINATION_SUGGESTIONS, ORIGIN_SUGGESTIONS } from '../services/stations';
-import { CATEGORY_ICONS, CATEGORY_LABELS, getActiveReports } from '../storage/reports';
+import { CATEGORY_LABELS, getActiveReports } from '../storage/reports';
 import { getSavedRoutes } from '../storage/routes';
 import { colors, fonts, radius, spacing, themed, toneColors, useIsWide } from '../theme';
 import { Report, SavedRoute, ScoredRoute } from '../types';
@@ -23,7 +22,7 @@ const PROFILE_SHORT: Record<string, string> = {
   gestante: 'Gestante',
   cadeirante: 'Cadeira de rodas',
   carrinho: 'Carrinho de bebê',
-  idoso: 'Idoso(a)',
+  idoso: 'Pessoa idosa',
   temporaria: 'Mobilidade temporária',
 };
 
@@ -95,11 +94,10 @@ export default function SearchRouteScreen() {
           style={styles.profileChip}
           accessibilityLabel="Editar perfil de mobilidade"
         >
-          <Ionicons name={profileIcon(user?.profile?.type)} size={14} color={colors.brandDark} />
           <Text style={styles.profileChipText}>
-            Avaliando para: {PROFILE_SHORT[user?.profile?.type ?? ''] ?? '—'}
+            Notas calculadas para: {PROFILE_SHORT[user?.profile?.type ?? ''] ?? 'seu perfil'}
           </Text>
-          <Ionicons name="chevron-forward" size={13} color={colors.brandDark} />
+          <Text style={[styles.profileChipText, { textDecorationLine: 'underline' }]}>alterar</Text>
         </Pressable>
       </View>
 
@@ -111,9 +109,7 @@ export default function SearchRouteScreen() {
             <Ionicons name="location" size={18} color={colors.brand} />
           </View>
           <View style={{ flex: 1 }}>
-            <T variant="overline" style={{ fontSize: 10.5 }}>
-              Saindo de
-            </T>
+            <T variant="overline">Saindo de</T>
             <TextInput
               value={origin}
               onChangeText={(t) => {
@@ -127,9 +123,7 @@ export default function SearchRouteScreen() {
               accessibilityLabel="Origem"
             />
             <View style={styles.inputDivider} />
-            <T variant="overline" style={{ fontSize: 10.5 }}>
-              Indo para
-            </T>
+            <T variant="overline">Indo para</T>
             <TextInput
               value={destination}
               onChangeText={(t) => {
@@ -138,7 +132,7 @@ export default function SearchRouteScreen() {
               }}
               onFocus={() => setFocused('destination')}
               onSubmitEditing={handleSearch}
-              placeholder="Hospital, UBS, trabalho…"
+              placeholder="Hospital, UBS, trabalho"
               placeholderTextColor={colors.inkFaint}
               style={[styles.input, webInput]}
               accessibilityLabel="Destino"
@@ -165,7 +159,7 @@ export default function SearchRouteScreen() {
           </Row>
         ) : null}
 
-        <Button title="Buscar rotas acessíveis" icon="search" onPress={handleSearch} />
+        <Button title="Buscar rotas" onPress={handleSearch} />
 
         <View style={{ gap: spacing.sm }}>
           <T variant="caption" style={{ fontSize: 12 }}>
@@ -178,11 +172,6 @@ export default function SearchRouteScreen() {
                 onPress={() => pickSuggestion(s)}
                 style={({ pressed }) => [styles.chip, pressed && { backgroundColor: colors.brandSoft }]}
               >
-                <Ionicons
-                  name={focused === 'origin' ? 'subway-outline' : 'business-outline'}
-                  size={13}
-                  color={colors.inkSoft}
-                />
                 <Text style={styles.chipText} numberOfLines={1}>
                   {s}
                 </Text>
@@ -221,7 +210,6 @@ export default function SearchRouteScreen() {
         />
         {trips.length === 0 ? (
           <View style={[styles.panel, styles.emptyPanel]}>
-            <Ionicons name="bookmark-outline" size={20} color={colors.inkFaint} />
             <T variant="caption" style={{ flex: 1 }}>
               Salve um trajeto que você faz sempre e a gente avisa quando algo quebrar no caminho.
             </T>
@@ -246,7 +234,7 @@ export default function SearchRouteScreen() {
                       {saved.name}
                     </T>
                     <T variant="caption" numberOfLines={1}>
-                      {current.origin} → {current.destination}
+                      {current.origin} até {current.destination}
                     </T>
                   </View>
                   {hasAlert ? (
@@ -280,13 +268,7 @@ export default function SearchRouteScreen() {
                   pressed && { backgroundColor: colors.surfaceAlt },
                 ]}
               >
-                <View style={[styles.reportIcon, { backgroundColor: tone.bg }]}>
-                  <Ionicons
-                    name={CATEGORY_ICONS[r.category] as keyof typeof Ionicons.glyphMap}
-                    size={18}
-                    color={tone.fg}
-                  />
-                </View>
+                <View style={[styles.reportDot, { backgroundColor: tone.fg }]} />
                 <View style={{ flex: 1, gap: 2 }}>
                   <T variant="bodyStrong" numberOfLines={1}>
                     {r.location}
@@ -295,10 +277,9 @@ export default function SearchRouteScreen() {
                     {CATEGORY_LABELS[r.category]} · {timeUntil(r.expiresAt)}
                   </T>
                 </View>
-                <Row gap={3}>
-                  <Ionicons name="people-outline" size={14} color={colors.inkFaint} />
-                  <Text style={styles.count}>{r.confirmations.length}</Text>
-                </Row>
+                <Text style={styles.count}>
+                  {r.confirmations.length} confirm.
+                </Text>
               </Pressable>
             );
           })}
@@ -310,14 +291,12 @@ export default function SearchRouteScreen() {
               pressed && { backgroundColor: colors.surfaceAlt },
             ]}
           >
-            <IconBubble icon="camera-outline" size={40} />
             <View style={{ flex: 1 }}>
               <T variant="bodyStrong" color={colors.brand}>
                 Relatar um problema
               </T>
-              <T variant="caption">Elevador parado, calçada ruim, rampa bloqueada…</T>
+              <T variant="caption">Elevador parado, calçada ruim ou rampa bloqueada</T>
             </View>
-            <Ionicons name="add" size={20} color={colors.brand} />
           </Pressable>
         </View>
       </View>
@@ -413,9 +392,8 @@ const styles = themed(() =>
     chip: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
       maxWidth: '100%',
-      paddingHorizontal: 11,
+      paddingHorizontal: 12,
       paddingVertical: 7,
       borderRadius: radius.pill,
       borderWidth: 1,
@@ -440,7 +418,7 @@ const styles = themed(() =>
       paddingVertical: spacing.md,
     },
     rowBorder: { borderTopWidth: 1, borderTopColor: colors.line },
-    reportIcon: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-    count: { fontFamily: fonts.bold, fontSize: 12.5, color: colors.inkSoft },
+    reportDot: { width: 8, height: 8, borderRadius: 4 },
+    count: { fontFamily: fonts.medium, fontSize: 12, color: colors.inkFaint },
   }),
 );

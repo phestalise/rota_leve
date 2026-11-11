@@ -17,7 +17,7 @@ const SHORT_LABELS: Record<MobilityType, string> = {
   gestante: 'Gestante',
   cadeirante: 'Cadeira de rodas',
   carrinho: 'Carrinho de bebê',
-  idoso: 'Idoso(a)',
+  idoso: 'Pessoa idosa',
   temporaria: 'Mobilidade temporária',
 };
 
@@ -111,11 +111,11 @@ export default function MobilityProfileScreen({ navigation, route }: Props) {
           <SectionHeader title="O que pesa na rota" />
           <Card style={{ padding: 0, gap: 0 }}>
             <Toggle icon="footsteps-outline" label="Evitar escadas" value={prefs.avoidStairs} onChange={(v) => setPrefs({ ...prefs, avoidStairs: v })} />
-            <Divider inset={66} />
+            <Divider inset={16} />
             <Toggle icon="arrow-up-circle-outline" label="Priorizar elevador" value={prefs.preferElevator} onChange={(v) => setPrefs({ ...prefs, preferElevator: v })} />
-            <Divider inset={66} />
+            <Divider inset={16} />
             <Toggle icon="cafe-outline" label="Preciso de assento" value={prefs.needSeat} onChange={(v) => setPrefs({ ...prefs, needSeat: v })} />
-            <Divider inset={66} />
+            <Divider inset={16} />
             <Toggle icon="trending-up-outline" label="Evitar ladeiras" value={prefs.avoidSteepSlopes} onChange={(v) => setPrefs({ ...prefs, avoidSteepSlopes: v })} />
           </Card>
 
@@ -170,7 +170,6 @@ function Toggle({
 }) {
   return (
     <Pressable onPress={() => onChange(!value)} style={styles.toggle} accessibilityRole="switch" accessibilityState={{ checked: value }}>
-      <IconBubble icon={icon} size={36} tone={value ? 'brand' : 'neutral'} />
       <T variant="bodyStrong" style={{ flex: 1 }}>
         {label}
       </T>

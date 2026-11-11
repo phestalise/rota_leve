@@ -42,7 +42,7 @@ export default function RouteDetailScreen({ route: navRoute, navigation }: Props
     const saved = await saveRoute(user!.id, route);
     setSavedId(saved.id);
     setBusy(false);
-    notify('Rota salva', 'Você será avisado(a) se algum problema surgir neste trajeto.');
+    notify('Rota salva', 'Se alguém relatar um problema neste trajeto, ela aparece com aviso na tela inicial.');
   }
 
   async function handleRemove() {
@@ -83,7 +83,7 @@ export default function RouteDetailScreen({ route: navRoute, navigation }: Props
             <Text style={[styles.verdict, { color: tone.fg }]}>{scoreVerdict(route.score, route.blocked)}</Text>
             <T variant="h2">{route.summary}</T>
             <T variant="caption" numberOfLines={2}>
-              {route.origin} → {route.destination}
+              {route.origin} até {route.destination}
             </T>
           </View>
         </View>
@@ -101,14 +101,9 @@ export default function RouteDetailScreen({ route: navRoute, navigation }: Props
 
       {/* Explicação */}
       <View style={styles.ai}>
-        <Row gap={8}>
-          <View style={styles.aiIcon}>
-            <Ionicons name="sparkles" size={14} color={colors.white} />
-          </View>
-          <T variant="label" color={colors.brandDark}>
-            Resumo para você
-          </T>
-        </Row>
+        <T variant="label" color={colors.brandDark}>
+          Resumo
+        </T>
         <T variant="body" color={colors.ink} style={{ fontSize: 15.5, lineHeight: 24 }}>
           {route.explanation}
         </T>
@@ -163,7 +158,7 @@ function Stat({ icon, value, unit }: { icon: keyof typeof Ionicons.glyphMap; val
 
 const styles = themed(() => StyleSheet.create({
   hero: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, padding: spacing.lg },
-  verdict: { fontFamily: fonts.bold, fontSize: 11.5, letterSpacing: 0.6, textTransform: 'uppercase' },
+  verdict: { fontFamily: fonts.semibold, fontSize: 12.5 },
   stats: { paddingVertical: spacing.lg },
   statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.line },
   statValue: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.ink, letterSpacing: -0.3 },

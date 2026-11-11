@@ -10,7 +10,7 @@ const STEPS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'person-circle-outline',
     title: 'Você conta como se desloca',
-    text: 'Gestante, cadeira de rodas, carrinho, idoso(a) ou mobilidade reduzida. Isso define o que pesa na rota.',
+    text: 'Gestante, cadeira de rodas, carrinho, pessoa idosa ou com mobilidade reduzida. Isso define o que pesa na nota.',
   },
   {
     icon: 'podium-outline',
@@ -24,7 +24,7 @@ const STEPS: { icon: IconName; title: string; text: string }[] = [
   },
   {
     icon: 'notifications-outline',
-    title: 'Você é avisado(a) a tempo',
+    title: 'Avisos nas rotas salvas',
     text: 'Se algo quebrar numa rota salva, o app avisa e mostra alternativas.',
   },
 ];
@@ -39,7 +39,6 @@ export default function AboutScreen() {
       </View>
 
       <Card style={styles.quote}>
-        <Ionicons name="chatbox-ellipses" size={22} color={colors.brand} />
         <T variant="body" color={colors.ink} style={{ fontSize: 15.5, lineHeight: 24 }}>
           A Júlia está grávida de 8 meses e precisa ir ao pré-natal. O app comum manda ela pela estação com o
           elevador quebrado. No Rota Leve, essa rota cai para o fim da lista e ela recebe uma alternativa com
@@ -51,12 +50,9 @@ export default function AboutScreen() {
       <Card style={{ gap: spacing.lg }}>
         {STEPS.map((s, i) => (
           <Row key={s.title} gap={spacing.md} align="flex-start">
-            <View>
-              <IconBubble icon={s.icon} size={42} />
-              <View style={styles.stepNum}>
-                <Text style={styles.stepNumText}>{i + 1}</Text>
-              </View>
-            </View>
+            <T variant="title" color={colors.brand} style={{ width: 18 }}>
+              {i + 1}
+            </T>
             <View style={{ flex: 1, gap: 2 }}>
               <T variant="title" style={{ fontSize: 15 }}>
                 {s.title}

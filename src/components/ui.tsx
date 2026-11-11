@@ -39,11 +39,9 @@ const variantStyles = themed((): Record<Variant, TextStyle> => ({
   label: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 18, color: colors.ink },
   caption: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
   overline: {
-    fontFamily: fonts.bold,
-    fontSize: 11.5,
-    lineHeight: 16,
-    letterSpacing: 0.9,
-    textTransform: 'uppercase',
+    fontFamily: fonts.semibold,
+    fontSize: 12.5,
+    lineHeight: 17,
     color: colors.inkFaint,
   },
 }));
@@ -205,9 +203,7 @@ export function Button({
         <ActivityIndicator color={p.fg} />
       ) : (
         <>
-          {icon && <Ionicons name={icon} size={small ? 16 : 19} color={p.fg} />}
           <Text style={[styles.buttonText, small && { fontSize: 14 }, { color: p.fg }]}>{title}</Text>
-          {iconRight && <Ionicons name={iconRight} size={small ? 16 : 19} color={p.fg} />}
         </>
       )}
     </Pressable>
@@ -273,14 +269,6 @@ export function Field({
           props.multiline && { alignItems: 'flex-start' },
         ]}
       >
-        {icon && (
-          <Ionicons
-            name={icon}
-            size={18}
-            color={focused ? colors.brand : colors.inkFaint}
-            style={props.multiline ? { marginTop: 14 } : undefined}
-          />
-        )}
         <TextInput
           placeholderTextColor={colors.inkFaint}
           accessibilityLabel={label ?? props.placeholder}
@@ -418,7 +406,6 @@ export function Pill({
   const c = toneColors(tone);
   return (
     <View style={[styles.pill, { backgroundColor: c.bg }, style]}>
-      {icon && <Ionicons name={icon} size={13} color={c.fg} />}
       <Text style={[styles.pillText, { color: c.fg }]}>{text}</Text>
     </View>
   );
@@ -456,7 +443,6 @@ export function Banner({
   const c = toneColors(tone);
   const content = (
     <Row align="flex-start" gap={spacing.md}>
-      <IconBubble icon={icon} tone={tone} size={36} solid />
       <View style={{ flex: 1, gap: 2 }}>
         <T variant="title" style={{ fontSize: 15 }}>
           {title}
@@ -465,13 +451,12 @@ export function Banner({
         {actionLabel ? (
           <Row gap={4} style={{ marginTop: 6 }}>
             <Text style={[styles.bannerAction, { color: c.fg }]}>{actionLabel}</Text>
-            <Ionicons name="arrow-forward" size={14} color={c.fg} />
           </Row>
         ) : null}
       </View>
     </Row>
   );
-  const style = [styles.banner, { backgroundColor: c.bg }];
+  const style = [styles.banner, { backgroundColor: c.bg, borderLeftColor: c.fg }];
   return onPress ? (
     <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [style, pressed && { opacity: 0.9 }]}>
       {content}
@@ -492,7 +477,7 @@ export function SectionHeader({
 }) {
   return (
     <Row style={{ justifyContent: 'space-between', marginTop: spacing.sm }}>
-      <T variant="overline">{title}</T>
+      <T variant="title">{title}</T>
       {action && onAction ? (
         <Pressable onPress={onAction} hitSlop={8}>
           <Text style={styles.sectionAction}>{action}</Text>
@@ -531,7 +516,6 @@ export function ListRow({
       accessibilityRole={onPress ? 'button' : undefined}
       style={({ pressed }) => [styles.listRow, pressed && { backgroundColor: colors.bg }]}
     >
-      <IconBubble icon={icon} tone={danger ? 'bad' : tone} size={38} />
       <View style={{ flex: 1 }}>
         <T variant="bodyStrong" color={danger ? colors.bad : colors.ink}>
           {title}
@@ -611,9 +595,6 @@ export function EmptyState({
 }) {
   return (
     <View style={styles.empty}>
-      <View style={styles.emptyHalo}>
-        <IconBubble icon={icon} size={64} />
-      </View>
       <T variant="h2" center>
         {title}
       </T>
@@ -708,7 +689,7 @@ const styles = themed(() => StyleSheet.create({
     alignSelf: 'flex-start',
   },
   pillText: { fontFamily: fonts.semibold, fontSize: 12 },
-  banner: { borderRadius: radius.lg, padding: spacing.lg },
+  banner: { borderRadius: radius.md, padding: spacing.lg, borderLeftWidth: 3 },
   bannerAction: { fontFamily: fonts.bold, fontSize: 13 },
   sectionAction: { fontFamily: fonts.bold, fontSize: 13, color: colors.brand },
   listRow: {
