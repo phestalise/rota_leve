@@ -1,143 +1,80 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Logo from '../components/Logo';
-import { Button, Pill, Row, ScoreRing, T, ThemeToggle } from '../components/ui';
+import MapIllustration from '../components/MapIllustration';
+import { Button, Row, T, ThemeToggle } from '../components/ui';
 import { AuthStackParamList } from '../navigation/types';
 import { colors, radius, spacing, themed, useIsWide } from '../theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
-const FEATURES: { title: string; text: string }[] = [
-  {
-    title: 'Você diz como se desloca',
-    text: 'Gestante, cadeira de rodas, carrinho de bebê, pessoa idosa ou com mobilidade reduzida.',
-  },
-  {
-    title: 'O app dá uma nota para cada rota',
-    text: 'Conta escadas, elevadores, distância a pé, ladeiras e se tem onde sentar.',
-  },
-  {
-    title: 'Outros usuários avisam dos problemas',
-    text: 'Se o elevador de uma estação da sua rota quebrar, você recebe um aviso.',
-  },
-];
-
-/** Prévia ilustrativa de como uma rota aparece no app. */
-function RoutePreview() {
-  return (
-    <View style={styles.preview}>
-      <Row gap={spacing.md}>
-        <ScoreRing score={92} size={56} />
-        <View style={{ flex: 1, gap: 2 }}>
-          <T variant="overline">Exemplo para gestante</T>
-          <T variant="title">Tatuapé até Hospital São Paulo</T>
-          <T variant="caption">42 min · 1 baldeação · 380 m a pé</T>
-        </View>
-      </Row>
-      <Row gap={6} style={{ flexWrap: 'wrap' }}>
-        <Pill text="Elevador funcionando" tone="good" />
-        <Pill text="Sem escadas" tone="good" />
-        <Pill text="Tem onde sentar" tone="neutral" />
-      </Row>
-      <View style={styles.previewAlert}>
-        <T variant="caption" color={colors.ink} style={{ flex: 1 }}>
-          A rota mais rápida passa pela Sé, onde o elevador está quebrado. Por isso ela aparece por último.
-        </T>
-      </View>
-    </View>
-  );
-}
-
 export default function WelcomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const wide = useIsWide();
 
-  const actions = (
-    <View style={{ gap: spacing.sm }}>
-      <Button title="Criar conta" onPress={() => navigation.navigate('Register')} />
-      <Button title="Já tenho conta" variant="secondary" onPress={() => navigation.navigate('Login')} />
-    </View>
-  );
-
-  const intro = (
-    <View style={{ gap: spacing.md }}>
-      <T variant="display" style={wide ? { fontSize: 44, lineHeight: 52, letterSpacing: -1 } : { fontSize: 32, lineHeight: 38 }}>
-        Transporte público com menos escada e menos caminhada.
+  const slogan = (size: number) => {
+    const style = { fontSize: size, lineHeight: size * 1.12, letterSpacing: -1 };
+    return (
+      <T variant="display" style={style}>
+        Sua rota{'\n'}
+        <T variant="display" color={colors.brand} style={style}>
+          acessível.
+        </T>
       </T>
-      <T variant="body" style={{ fontSize: 16, lineHeight: 24 }}>
-        O Rota Leve compara as opções de ônibus, metrô e trem em São Paulo e mostra primeiro as que
-        são mais fáceis para você.
-      </T>
-    </View>
+    );
+  };
+
+  const subtitle = (
+    <T variant="body" style={{ fontSize: 16, lineHeight: 24 }}>
+      Ônibus e metrô sem escada no caminho, com elevador funcionando e menos caminhada.
+    </T>
   );
 
-  const features = (
-    <View style={{ gap: spacing.lg }}>
-      {FEATURES.map((f, i) => (
-        <Row key={f.title} gap={spacing.md} align="flex-start">
-          <T variant="title" color={colors.brand} style={{ width: 18 }}>
-            {i + 1}
-          </T>
-          <View style={{ flex: 1, gap: 2 }}>
-            <T variant="title" style={{ fontSize: 15 }}>
-              {f.title}
-            </T>
-            <T variant="caption">{f.text}</T>
-          </View>
-        </Row>
-      ))}
-    </View>
-  );
-
-  const header = (
-    <Row style={{ justifyContent: 'space-between' }}>
-      <Logo size={36} />
-      <ThemeToggle />
-    </Row>
-  );
+  const goRegister = () => navigation.navigate('Register');
+  const goLogin = () => navigation.navigate('Login');
 
   if (wide) {
     return (
-      <ScrollView
-        style={{ flex: 1, backgroundColor: colors.bg }}
-        contentContainerStyle={[styles.widePage, { paddingTop: insets.top + spacing.xl }]}
-      >
-        {header}
-        <Row align="center" gap={64} style={{ flex: 1, paddingVertical: spacing.xxxl }}>
-          <View style={{ flex: 1, gap: spacing.xxl, maxWidth: 520 }}>
-            {intro}
-            {features}
-            <Row gap={spacing.sm}>
-              <Button title="Criar conta" onPress={() => navigation.navigate('Register')} style={{ paddingHorizontal: 28 }} />
-              <Button title="Já tenho conta" variant="secondary" onPress={() => navigation.navigate('Login')} style={{ paddingHorizontal: 28 }} />
+      <View style={styles.widePage}>
+        <View style={[styles.wideLeft, { paddingTop: insets.top + spacing.xl }]}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Logo size={36} />
+            <ThemeToggle />
+          </Row>
+          <View style={{ flex: 1, justifyContent: 'center', gap: spacing.lg, maxWidth: 440 }}>
+            {slogan(64)}
+            {subtitle}
+            <Row gap={spacing.sm} style={{ marginTop: spacing.md }}>
+              <Button title="Criar conta" onPress={goRegister} style={{ paddingHorizontal: 32 }} />
+              <Button title="Já tenho conta" variant="secondary" onPress={goLogin} style={{ paddingHorizontal: 32 }} />
             </Row>
           </View>
-          <View style={{ flex: 1, maxWidth: 440 }}>
-            <RoutePreview />
-          </View>
-        </Row>
-        <T variant="caption" color={colors.inkFaint}>
-          Global Solution 2026, FIAP
-        </T>
-      </ScrollView>
+        </View>
+        <MapIllustration style={styles.wideMap} />
+      </View>
     );
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ScrollView
-        contentContainerStyle={[styles.mobilePage, { paddingTop: insets.top + spacing.lg }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {header}
-        {intro}
-        <RoutePreview />
-        {features}
-      </ScrollView>
-      <SafeAreaView edges={['bottom']} style={styles.footer}>
-        {actions}
+      <View style={{ flex: 1 }}>
+        <MapIllustration style={StyleSheet.absoluteFill} />
+        <Row style={[styles.mobileTop, { top: insets.top + spacing.md }]}>
+          <View style={styles.logoChip}>
+            <Logo size={30} />
+          </View>
+          <ThemeToggle />
+        </Row>
+      </View>
+      <SafeAreaView edges={['bottom']} style={styles.sheet}>
+        {slogan(38)}
+        {subtitle}
+        <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
+          <Button title="Criar conta" onPress={goRegister} />
+          <Button title="Já tenho conta" variant="secondary" onPress={goLogin} />
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -145,38 +82,31 @@ export default function WelcomeScreen({ navigation }: Props) {
 
 const styles = themed(() =>
   StyleSheet.create({
-    widePage: {
-      flexGrow: 1,
-      width: '100%',
-      maxWidth: 1080,
-      alignSelf: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingBottom: spacing.xl,
+    widePage: { flex: 1, flexDirection: 'row', backgroundColor: colors.bg },
+    wideLeft: { flex: 1, paddingHorizontal: 64, paddingBottom: spacing.xxxl },
+    wideMap: { flex: 1.1, margin: spacing.lg, borderRadius: radius.xl },
+    mobileTop: {
+      position: 'absolute',
+      left: spacing.xl,
+      right: spacing.xl,
+      justifyContent: 'space-between',
     },
-    mobilePage: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl, gap: spacing.xxl },
-    footer: {
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: colors.line,
+    logoChip: {
       backgroundColor: colors.surface,
+      borderRadius: radius.pill,
+      paddingVertical: 6,
+      paddingLeft: 6,
+      paddingRight: 14,
     },
-    preview: {
-      backgroundColor: colors.surface,
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      borderColor: colors.line,
-      padding: spacing.xl,
-      gap: spacing.lg,
-    },
-    previewAlert: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-      alignItems: 'flex-start',
-      backgroundColor: colors.badSoft,
-      borderRadius: radius.md,
-      padding: spacing.md,
+    sheet: {
+      backgroundColor: colors.bg,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      marginTop: -28,
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xxl,
+      paddingBottom: spacing.lg,
+      gap: spacing.md,
     },
   }),
 );
