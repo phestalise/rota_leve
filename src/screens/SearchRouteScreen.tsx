@@ -4,8 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Logo from '../components/Logo';
-import { Banner, Button, Row, ScoreRing, T, ThemeToggle } from '../components/ui';
+import { Banner, Button, Row, ScoreRing, T } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { AppStackParamList } from '../navigation/types';
 import { scoreRoute } from '../services/accessibility';
@@ -308,17 +307,11 @@ export default function SearchRouteScreen() {
       style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={[
         styles.page,
-        { paddingTop: insets.top + (wide ? spacing.xxxl : spacing.lg) },
+        { paddingTop: insets.top + (wide ? spacing.xxxl : spacing.xl) },
       ]}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {!wide && (
-        <Row style={{ justifyContent: 'space-between', marginBottom: spacing.lg }}>
-          <Logo size={34} />
-          <ThemeToggle />
-        </Row>
-      )}
       {wide ? (
         <Row align="flex-start" gap={spacing.xxxl}>
           <View style={{ flex: 1.25 }}>{searchColumn}</View>
