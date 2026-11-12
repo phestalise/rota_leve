@@ -20,7 +20,7 @@ ODS 10 (redução das desigualdades) e ODS 11 (cidades e comunidades sustentáve
 ## Stack
 
 - **React Native com Expo** (SDK 58) + **TypeScript**
-- **React Navigation** (native stack + bottom tabs)
+- **React Navigation** (native stack + abas, com menu sanduíche no celular e barra superior no desktop)
 - **AsyncStorage** (`@react-native-async-storage/async-storage`) para a persistência local
 - **expo-image-picker** para a foto do relato (câmera no celular, arquivo no navegador)
 
@@ -31,7 +31,7 @@ ODS 10 (redução das desigualdades) e ODS 11 (cidades e comunidades sustentáve
 Pré-requisitos: Node.js 20+ e npm.
 
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/phestalise/rota_leve.git
 cd rota_leve
 npm install
 npx expo start
@@ -73,7 +73,7 @@ Na primeira execução o app grava no AsyncStorage os usuários de teste, alguns
 - [x] Lista dos registros (relatos e rotas)
 - [x] Formulário de cadastro (novo relato e cadastro de usuário)
 - [x] Tela de consulta/detalhe de um registro (detalhe do relato e da rota)
-- [x] Navegação entre as telas (stack + abas)
+- [x] Navegação entre as telas (stack + abas, menu sanduíche no celular)
 - [x] Persistência local com AsyncStorage (usuários, sessão, perfil, relatos e rotas salvas)
 
 ## Regras de negócio implementadas
@@ -105,4 +105,8 @@ Link do vídeo (até 3 min): **_adicionar link do YouTube aqui_**
 
 | Nome | RM |
 |---|---|
-| _Nome completo_ | _RM_ |
+| Emanuel Italo | RM561337 |
+| Enzo Monteiro | RM563734 |
+| Gabriel Bebe | RM562012 |
+| Matheus De Almeida | RM563557 |
+| Paulo Estalise | RM563811 |
