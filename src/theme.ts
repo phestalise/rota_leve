@@ -35,7 +35,8 @@ const light = {
 };
 
 const dark: typeof light = {
-  bg: '#0A0A0A',
+  // Preto puro: é idêntico em qualquer perfil de cor (telas P3), então o fundo nunca sai em dois tons.
+  bg: '#000000',
   surface: '#151515',
   surfaceAlt: '#212121',
   line: '#2A2A2A',

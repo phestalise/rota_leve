@@ -47,8 +47,8 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ paddingBottom: spacing.xxxl }}
+      style={{ flex: 1 }}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing.xxxl, backgroundColor: colors.bg }}
       showsVerticalScrollIndicator={false}
     >
       <Container style={{ paddingTop: insets.top + spacing.xxl, gap: spacing.lg }}>

@@ -31,7 +31,7 @@ export default function MapIllustration({
   attributionOffset?: number;
 }) {
   const dark = getThemeMode() === 'dark';
-  const halo = dark ? '#0A0A0A' : '#FFFFFF';
+  const halo = dark ? '#000000' : '#FFFFFF';
 
   return (
     <View style={[{ overflow: 'hidden', backgroundColor: dark ? '#111' : '#EEE' }, style]}>

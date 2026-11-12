@@ -304,9 +304,10 @@ export default function SearchRouteScreen() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
+      style={{ flex: 1 }}
       contentContainerStyle={[
         styles.page,
+        { flexGrow: 1 },
         { paddingTop: insets.top + (wide ? spacing.xxxl : spacing.xl) },
       ]}
       keyboardShouldPersistTaps="handled"

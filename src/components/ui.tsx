@@ -81,7 +81,8 @@ export function Screen({
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {scroll ? (
           <ScrollView
-            contentContainerStyle={[styles.screenContent, style]}
+            style={{ flex: 1 }}
+            contentContainerStyle={[styles.screenContent, { flexGrow: 1 }, style]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
